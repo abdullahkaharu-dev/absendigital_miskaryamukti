@@ -1,0 +1,2703 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#059669">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Absensi Siswa MIS Al-Awwaliyah Karyamukti</title>
+    
+    <!-- Google Fonts for Arabic Calligraphy & Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Scheherazade+New:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- SheetJS for Excel import & export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #059669;
+            --primary-dark: #047857;
+            --primary-light: #d1fae5;
+            --secondary: #0ea5e9;
+            --gold: #f59e0b;
+            --gold-light: #fef3c7;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            
+            /* Attendance Status Colors */
+            --c-hadir: #10b981;
+            --c-sakit: #3b82f6;
+            --c-izin: #f59e0b;
+            --c-alpa: #ef4444;
+            --c-telat: #8b5cf6;
+
+            /* Visual Accents */
+            --radius-sm: 8px;
+            --radius: 16px;
+            --radius-lg: 24px;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.15);
+            --header-h: 72px;
+            --nav-h: 68px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --primary-light: rgba(5, 150, 105, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding-top: var(--header-h);
+            padding-bottom: calc(var(--nav-h) + 24px);
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        body.cover-active {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5 { color: var(--text-main); font-weight: 700; }
+        p { color: var(--text-muted); line-height: 1.5; }
+        
+        .container {
+            padding: 18px 16px;
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        #cover-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at top right, #065f46, #047857, #022c22);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            padding: 0 0 20px 0;
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        /* Sticky High-Visibility Marquee Bar */
+        .marquee-container {
+            width: 100%;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(2, 44, 34, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 2px solid #f59e0b;
+            padding: 11px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .marquee-text {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 24s linear infinite;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fef08a;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .cover-content {
+            padding: 16px 20px;
+            max-width: 720px;
+            width: 92%;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Basmalah Calligraphy Wrapper */
+        .basmalah-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 580px;
+            margin: 10px auto 18px auto;
+            filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.5));
+            transition: transform 0.3s ease;
+        }
+
+        .basmalah-wrapper:hover {
+            transform: translateY(-2px) scale(1.01);
+        }
+
+        .cover-badge {
+            background: rgba(245, 158, 11, 0.25);
+            border: 1px solid #f59e0b;
+            color: #fef08a;
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .cover-title {
+            font-size: 1.55rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+            line-height: 1.3;
+            color: #ffffff;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .cover-subtitle {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #a7f3d0;
+            margin-bottom: 4px;
+        }
+
+        .cover-location {
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        /* Class Login Selection Grid */
+        .login-grid-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #fde047;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .class-login-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 420px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 480px) {
+            .class-login-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .btn-class-login {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-class-login:hover {
+            background: rgba(255, 255, 255, 0.28);
+            border-color: #f59e0b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        .btn-admin-login {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff !important;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 14px 24px;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(217, 119, 6, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 420px;
+            transition: all 0.2s ease;
+            margin-bottom: 10px;
+        }
+
+        .btn-admin-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(217, 119, 6, 0.55);
+        }
+
+        .btn-dev {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            color: #ffffff;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-dev:hover {
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--header-h);
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .header-info h1 { font-size: 1.05rem; color: #ffffff; margin-bottom: 2px; display: flex; align-items: center; gap: 8px;}
+        .header-info p { color: #a7f3d0; font-size: 0.76rem; font-weight: 500; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #fef08a;
+            border: 1px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .icon-btn {
+            background: rgba(255,255,255,0.18);
+            border: none;
+            color: white;
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.3); }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: var(--nav-h);
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+            z-index: 1000;
+            border-top: 1px solid var(--border);
+        }
+        
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.72rem;
+            font-weight: 600;
+            width: 100%;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .nav-item.active { 
+            color: var(--primary); 
+            transform: translateY(-2px);
+        }
+        
+        .nav-item svg { width: 22px; height: 22px; margin-bottom: 3px; fill: currentColor; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+        @media (max-width: 640px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 16px;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+        }
+        .stat-card.hadir { background: rgba(16, 185, 129, 0.12); color: var(--c-hadir); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .stat-card.izin { background: rgba(245, 158, 11, 0.12); color: var(--c-izin); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .stat-card.sakit { background: rgba(59, 130, 246, 0.12); color: var(--c-sakit); border: 1px solid rgba(59, 130, 246, 0.3); }
+        .stat-card.alpa { background: rgba(239, 68, 68, 0.12); color: var(--c-alpa); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .stat-card h3 { font-size: 1.7rem; margin-top: 6px; }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 46px;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+            transition: all 0.2s ease;
+        }
+        .btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        
+        .btn-secondary { background: var(--secondary); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); box-shadow: none; }
+        .btn-danger { background: var(--c-alpa); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); }
+        .btn-gold { background: var(--gold); color: white; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25); }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.88rem; color: var(--text-main); }
+        
+        .form-control {
+            width: 100%; padding: 12px 14px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            background: var(--card-bg); color: var(--text-main);
+            font-size: 0.95rem; min-height: 48px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15); }
+
+        /* Tag Chips */
+        .tag-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .tag-chip {
+            background: var(--bg-color); border: 1px solid var(--border);
+            border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: 600;
+            color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+        }
+        .tag-chip:hover { background: var(--primary-light); color: var(--primary-dark); border-color: var(--primary); }
+
+        /* Interactive Menu Grid Tiles */
+        .menu-grid-tile {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px 16px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            cursor: pointer; box-shadow: var(--shadow-sm); transition: all 0.25s ease;
+        }
+        .menu-grid-tile:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--primary); }
+        .menu-tile-icon {
+            width: 56px; height: 56px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; margin-bottom: 12px; background: var(--bg-color);
+        }
+        .menu-tile-title { font-size: 0.98rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+        .menu-tile-desc { font-size: 0.78rem; color: var(--text-muted); }
+
+        .student-item { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-bottom: 1px solid var(--border); }
+        .student-item:last-child { border-bottom: none; }
+        .student-info { display: flex; justify-content: space-between; align-items: center; }
+        .student-name { font-weight: 700; font-size: 1.05rem; }
+        .student-nis { font-size: 0.8rem; color: var(--text-muted); }
+        
+        .attendance-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .btn-status {
+            min-height: 44px; border-radius: 10px; border: 1.5px solid var(--border);
+            background: var(--bg-color); font-weight: 700; font-size: 1.05rem; color: var(--text-muted);
+            cursor: pointer; transition: all 0.15s;
+        }
+        .btn-status.active-H { background: var(--c-hadir); color: white; border-color: var(--c-hadir); }
+        .btn-status.active-S { background: var(--c-sakit); color: white; border-color: var(--c-sakit); }
+        .btn-status.active-I { background: var(--c-izin); color: white; border-color: var(--c-izin); }
+        .btn-status.active-A { background: var(--c-alpa); color: white; border-color: var(--c-alpa); }
+        .btn-status.active-T { background: var(--c-telat); color: white; border-color: var(--c-telat); }
+
+        .progress-bar { width: 100%; height: 16px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 8px;}
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s ease; }
+        
+        /* Bar Chart */
+        .chart-container { display: flex; align-items: flex-end; height: 160px; gap: 8px; padding-top: 20px; }
+        .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%;}
+        .chart-bar { width: 100%; background: var(--primary); border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.5s; }
+        .chart-label { font-size: 0.72rem; margin-top: 6px; color: var(--text-muted); }
+
+        .table-responsive { overflow-x: auto; margin-top: 16px; border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; min-width: 650px; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: var(--bg-color); font-weight: 700; color: var(--text-muted); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.68); z-index: 10000;
+            display: none; justify-content: center; align-items: center; padding: 16px;
+            backdrop-filter: blur(6px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: var(--card-bg); width: 100%; max-width: 520px;
+            border-radius: var(--radius-lg); padding: 24px;
+            max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+            position: relative;
+            animation: modalPop 0.25s ease-out;
+            border: 1px solid var(--border);
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .close-modal { font-size: 1.6rem; background: none; border: none; cursor: pointer; color: var(--text-muted); }
+
+        .toast-container { 
+            position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); 
+            z-index: 12000; display: flex; flex-direction: column; gap: 10px; 
+            width: 90%; max-width: 420px; 
+        }
+        .toast { 
+            background: #1e293b; color: white; padding: 14px 18px; border-radius: 12px; 
+            display: flex; align-items: center; gap: 12px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2); animation: slideUp 0.3s ease; 
+            font-size: 0.9rem; font-weight: 500;
+        }
+        .toast.success { border-left: 5px solid var(--c-hadir); }
+        .toast.error { border-left: 5px solid var(--c-alpa); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Utilities */
+        .hidden { display: none !important; }
+        .view-section { display: none; animation: fadeIn 0.25s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .search-bar { position: relative; margin-bottom: 16px; }
+        .search-bar input { padding-left: 42px; }
+        .search-bar span { position: absolute; left: 14px; top: 12px; font-size: 1.1rem; }
+
+        /* Printable Area Styles */
+        @media print {
+            body { padding: 0 !important; background: white !important; color: black !important; }
+            header, .bottom-nav, .btn, .search-bar, .card, .toast-container, #cover-screen, .hide-print { display: none !important; }
+            #view-reports { display: block !important; }
+            .print-area { display: block !important; width: 100% !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
+            .print-area table { width: 100% !important; border-collapse: collapse !important; border: 1px solid #000 !important; }
+            .print-area th, .print-area td { border: 1px solid #000 !important; padding: 5px 6px !important; font-size: 9pt !important; color: #000 !important; text-align: center; }
+            .print-area th { background-color: #f1f5f9 !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
+            .print-area td.text-left { text-align: left !important; }
+            
+            .kop-surat {
+                text-align: center;
+                border-bottom: 3px double #000;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 15px;
+            }
+            .kop-surat img { width: 70px; height: 70px; object-fit: contain; }
+            .kop-text h2 { font-size: 13pt; margin-bottom: 2px; text-transform: uppercase; color: #000; }
+            .kop-text h3 { font-size: 11pt; margin-bottom: 2px; color: #000; }
+            .kop-text p { font-size: 8.5pt; color: #333; margin: 0; }
+
+            .ttd-section {
+                margin-top: 30px;
+                display: flex;
+                justify-content: space-between;
+                page-break-inside: avoid;
+            }
+            .ttd-box { text-align: center; width: 220px; }
+            .ttd-space { height: 55px; }
+        }
+    </style>
+</head>
+<body class="cover-active">
+
+    <div id="cover-screen">
+        <!-- STICKY TOP MARQUEE BANNER WITH HIGH CONTRAST & VISIBILITY -->
+        <div class="marquee-container">
+            <div class="marquee-text">
+                📢 Selamat Datang di Aplikasi Absensi Digital MIS Al-Awwaliyah Karyamukti &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp; 🕌 Mewujudkan Generasi Cerdas, Unggul, & Berakhlakul Karimah &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp; 📖 "Bismillahirrahmānirrahīm"
+            </div>
+        </div>
+
+        <div class="cover-content">
+            <div class="cover-badge">✨ Sistem Absensi Digital v3.0</div>
+
+            <!-- ELEGANT ARABIC BASMALAH CALLIGRAPHY DESIGN -->
+            <div class="basmalah-wrapper">
+                <svg viewBox="0 0 600 210" xmlns="http://www.w3.org/2000/svg" width="100%" height="auto">
+                    <defs>
+                        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fff176"/>
+                            <stop offset="35%" stop-color="#ffd54f"/>
+                            <stop offset="70%" stop-color="#ffb300"/>
+                            <stop offset="100%" stop-color="#ff8f00"/>
+                        </linearGradient>
+                        <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#34d399" stop-opacity="0.3"/>
+                            <stop offset="60%" stop-color="#059669" stop-opacity="0.12"/>
+                            <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+                        </radialGradient>
+                        <filter id="goldGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="3.5" result="blur" />
+                            <feComponentTransfer in="blur" result="glow1">
+                                <feFuncA type="linear" slope="0.7"/>
+                            </feComponentTransfer>
+                            <feMerge>
+                                <feMergeNode in="glow1"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+
+                    <!-- Background Glow Radial Circle -->
+                    <ellipse cx="300" cy="105" rx="280" ry="95" fill="url(#bgGlow)"/>
+
+                    <!-- Ornate Islamic Octagonal Frame Border -->
+                    <g stroke="url(#goldGrad)" fill="none" filter="url(#goldGlowFilter)">
+                        <rect x="20" y="15" width="560" height="180" rx="35" stroke-width="2.5" fill="rgba(2, 44, 34, 0.7)"/>
+                        <rect x="28" y="23" width="544" height="164" rx="28" stroke-width="1" stroke-dasharray="8,5" opacity="0.85"/>
+                    </g>
+
+                    <!-- Corner Islamic Ornaments -->
+                    <path d="M 40 45 Q 60 45 60 25" stroke="url(#goldGrad)" stroke-width="2" fill="none"/>
+                    <circle cx="45" cy="30" r="3" fill="#fef08a"/>
+                    
+                    <path d="M 560 45 Q 540 45 540 25" stroke="url(#goldGrad)" stroke-width="2" fill="none"/>
+                    <circle cx="555" cy="30" r="3" fill="#fef08a"/>
+                    
+                    <path d="M 40 165 Q 60 165 60 185" stroke="url(#goldGrad)" stroke-width="2" fill="none"/>
+                    <circle cx="45" cy="180" r="3" fill="#fef08a"/>
+                    
+                    <path d="M 560 165 Q 540 165 540 185" stroke="url(#goldGrad)" stroke-width="2" fill="none"/>
+                    <circle cx="555" cy="180" r="3" fill="#fef08a"/>
+
+                    <!-- Left Calligraphy Flourish -->
+                    <path d="M 50 105 C 75 75, 95 135, 120 105" stroke="url(#goldGrad)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="42" cy="105" r="4" fill="#fef08a"/>
+
+                    <!-- Right Calligraphy Flourish -->
+                    <path d="M 550 105 C 525 75, 505 135, 480 105" stroke="url(#goldGrad)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="558" cy="105" r="4" fill="#fef08a"/>
+
+                    <!-- Top Crescent & Star Symbol -->
+                    <g transform="translate(300, 20) scale(0.85)">
+                        <path d="M 0 -12 A 8 8 0 1 0 0 4 A 6 6 0 1 1 0 -12 Z" fill="#fef08a"/>
+                        <polygon points="7,-6 9,-1 14,-1 10,2 12,7 7,4 2,7 4,2 0,-1 5,-1" fill="#f59e0b"/>
+                    </g>
+
+                    <!-- MAIN ARABIC CALLIGRAPHY: LAFAL BASMALAH -->
+                    <text x="300" y="118" text-anchor="middle" font-family="'Amiri', 'Traditional Arabic', 'Scheherazade New', 'Aref Ruqaa', serif" font-size="44" font-weight="bold" fill="url(#goldGrad)" filter="url(#goldGlowFilter)" letter-spacing="1">
+                        بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                    </text>
+
+                    <!-- Latin Transliteration / Meaning Subtext -->
+                    <text x="300" y="152" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#a7f3d0" letter-spacing="1.5" opacity="0.95">
+                        "Dengan menyebut nama Allah Yang Maha Pengasih lagi Maha Penyayang"
+                    </text>
+
+                    <!-- Bottom Decorative Flourish Line -->
+                    <path d="M 180 170 Q 300 188 420 170" stroke="url(#goldGrad)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <polygon points="300,183 305,177 300,171 295,177" fill="#fef08a"/>
+                </svg>
+            </div>
+
+            <h1 class="cover-title">ABSENSI DIGITAL SISWA<br>MIS AL-AWWALIYAH KARYAMUKTI</h1>
+            <div class="cover-subtitle">KECAMATAN MOOTILANGO</div>
+            <div class="cover-location">KABUPATEN GORONTALO</div>
+
+            <!-- CLASS & ADMIN LOGIN BUTTONS -->
+            <div class="login-grid-title">Pilih Kelas Untuk Login Wali Kelas:</div>
+            <div class="class-login-grid" id="cover-class-buttons">
+                <!-- Class login buttons rendered dynamically -->
+            </div>
+
+            <button class="btn-admin-login" onclick="app.openLoginModal('admin')">
+                <span>🔐</span> LOGIN SEBAGAI ADMIN / GURU UTAMA
+            </button>
+
+            <button class="btn-dev" onclick="app.openModal('modal-developer')" style="margin-top: 6px;">
+                <span>👨‍💻</span> Profil Pengembang
+            </button>
+        </div>
+
+        <div style="font-size:0.75rem; opacity:0.85; padding-bottom: 8px;">
+            © 2026 MIS Al-Awwaliyah Karyamukti • Pengembang: Abdullah S. Kaharu, S.Pd
+        </div>
+    </div>
+
+    <header>
+        <div class="header-info">
+            <h1><span style="font-size:1.2rem">🕌</span> MIS Al-Awwaliyah</h1>
+            <p id="header-date">Senin, 1 Jan 2026 | 07:00</p>
+        </div>
+        <div class="header-actions">
+            <div class="user-badge" id="header-user-badge">
+                <span>👤</span> <span id="header-user-role">Guest</span>
+            </div>
+            <button class="icon-btn" title="Keluar / Logout" onclick="app.logout()">🚪</button>
+            <button class="icon-btn" title="Halaman Cover" onclick="app.showCover()">🏠</button>
+            <button class="icon-btn" title="Profil Pengembang" onclick="app.openModal('modal-developer')">👨‍💻</button>
+            <button class="icon-btn" id="btn-header-settings" title="Pengaturan" onclick="app.switchView('view-settings')">⚙️</button>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- View: Dashboard -->
+        <section id="view-dashboard" class="view-section active">
+            <div class="card" style="background: linear-gradient(135deg, #047857 0%, #059669 100%); color: white; border:none; box-shadow: var(--shadow-lg);">
+                <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+                    <img src="https://i.freeimage.host/nE7YK4S.png" alt="Logo" style="width:52px; height:52px; border-radius:50%; background:white; padding:3px; object-fit:contain;" onerror="this.style.display='none';">
+                    <div>
+                        <h2 style="color:white; margin-bottom:2px; font-size:1.2rem;" id="dash-school-name">MIS Al-Awwaliyah Karyamukti</h2>
+                        <p style="color:#a7f3d0; font-size:0.85rem;" id="dash-teacher-name">Abdullah S. Kaharu, S.Pd</p>
+                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.18); padding: 14px; border-radius: 12px; display:flex; justify-style:space-between; backdrop-filter:blur(6px);">
+                    <div>
+                        <span style="font-size:0.75rem; opacity:0.9">Total Siswa Terdaftar</span>
+                        <h2 style="color:white; font-size:1.5rem" id="dash-total-siswa">0</h2>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-size:0.75rem; opacity:0.9">Jumlah Kelas</span>
+                        <h2 style="color:white; font-size:1.5rem" id="dash-active-class">0</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-style:space-between; align-items:center; margin-bottom:12px;">
+                <h3>Statistik Kehadiran Hari Ini</h3>
+                <span style="font-size:0.8rem; color:var(--text-muted);" id="dash-stat-date">--</span>
+            </div>
+            
+            <div class="form-group">
+                <select class="form-control" id="dash-class-select" onchange="app.renderDashboardStats()">
+                    <!-- Options injected via JS -->
+                </select>
+            </div>
+
+            <div class="grid-2" style="margin-bottom: 16px;">
+                <div class="stat-card hadir">
+                    <div style="font-size: 0.8rem; font-weight:700;">🟢 HADIR</div>
+                    <h3 id="dash-count-h">0</h3>
+                </div>
+                <div class="stat-card izin">
+                    <div style="font-size: 0.8rem; font-weight:700;">🟡 IZIN</div>
+                    <h3 id="dash-count-i">0</h3>
+                </div>
+                <div class="stat-card sakit">
+                    <div style="font-size: 0.8rem; font-weight:700;">🔵 SAKIT</div>
+                    <h3 id="dash-count-s">0</h3>
+                </div>
+                <div class="stat-card alpa">
+                    <div style="font-size: 0.8rem; font-weight:700;">🔴 ALPA</div>
+                    <h3 id="dash-count-a">0</h3>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Persentase Kehadiran Kelas</h3>
+                <div style="display:flex; justify-style:space-between; margin-top:10px;">
+                    <span class="text-muted" id="dash-pct-text">Belum ada data</span>
+                    <strong id="dash-pct-num" style="color:var(--primary); font-size:1.1rem;">0%</strong>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="dash-progress" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <button class="btn btn-gold" onclick="app.switchView('view-attendance')">📝 Mulai Absen Hari Ini</button>
+                <button class="btn btn-secondary" id="btn-dash-teachers" onclick="app.switchView('view-teachers')">👨‍🏫 Kelola Data Guru</button>
+            </div>
+        </section>
+
+        <!-- View: Data Guru & Kepala Madrasah -->
+        <section id="view-teachers" class="view-section">
+            <h2 style="margin-bottom: 16px;">👨‍🏫 Data Guru & Kepala Madrasah</h2>
+            
+            <div class="card" style="border-left: 5px solid var(--gold);">
+                <div style="display:flex; justify-style:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 style="display:flex; align-items:center; gap:8px;">
+                        <span>🕌</span> Kepala Madrasah
+                    </h3>
+                    <button class="btn btn-outline" style="width:auto; min-height:36px; padding:6px 14px; font-size:0.82rem;" onclick="app.openModal('modal-headmaster')">✏️ Edit Kepala Madrasah</button>
+                </div>
+                <div style="background:var(--bg-color); padding:12px 16px; border-radius:12px; border:1px solid var(--border);">
+                    <div style="font-weight:700; font-size:1.1rem;" id="hm-display-name">-- Belum Diatur --</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);" id="hm-display-nip">NIP: -</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; justify-style:space-between; align-items:center; margin-bottom:16px;">
+                    <h3>Daftar Guru Pengajar</h3>
+                    <button class="btn" style="width:auto; min-height:40px; padding:8px 16px;" onclick="app.openModal('modal-teacher')">➕ Tambah Guru</button>
+                </div>
+                <div class="search-bar">
+                    <span>🔍</span>
+                    <input type="text" class="form-control" id="search-guru" placeholder="Cari nama guru atau NIP..." onkeyup="app.renderTeachers()">
+                </div>
+                <div id="teacher-list">
+                    <!-- Guru items rendered here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Data Siswa -->
+        <section id="view-students" class="view-section">
+            <h2 style="margin-bottom: 16px;">👨‍🎓 Data Siswa</h2>
+            
+            <div class="card">
+                <div class="form-group">
+                    <label>Filter Kelas</label>
+                    <select class="form-control" id="filter-class-siswa" onchange="app.renderStudents()">
+                        <option value="ALL">Semua Kelas</option>
+                    </select>
+                </div>
+                <div class="search-bar">
+                    <span>🔍</span>
+                    <input type="text" class="form-control" id="search-siswa" placeholder="Cari nama atau NIS..." onkeyup="app.renderStudents()">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 8px;">
+                    <button class="btn" onclick="app.openModal('modal-student')">➕ Tambah Siswa</button>
+                    <button class="btn btn-gold" onclick="app.triggerExcelUpload()">📥 Import Excel</button>
+                    <button class="btn btn-outline" onclick="app.downloadExcelTemplate()">📄 Unduh Template</button>
+                </div>
+                <input type="file" id="excel-file-input" class="hidden" accept=".xlsx, .xls, .csv" onchange="app.handleExcelUpload(event)">
+            </div>
+
+            <div id="student-list">
+                <!-- Data siswa di render di sini -->
+            </div>
+        </section>
+
+        <!-- View: Absensi -->
+        <section id="view-attendance" class="view-section">
+            <h2 style="margin-bottom: 16px;">✅ Absensi Hari Ini</h2>
+            
+            <div class="card" id="form-attendance-setup">
+                <div class="form-group">
+                    <label>Tanggal Absensi</label>
+                    <input type="date" class="form-control" id="att-date">
+                </div>
+                <div class="form-group">
+                    <label>Pilih Kelas</label>
+                    <select class="form-control" id="att-class">
+                        <!-- Options injected -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Guru Pengajar / Wali Kelas</label>
+                    <select class="form-control" id="att-teacher">
+                        <!-- Teacher options -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Mata Pelajaran (Ketik Manual)</label>
+                    <input type="text" class="form-control" id="att-subject" placeholder="Ketik nama mata pelajaran secara manual..." value="Mapel SKI">
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">Klik saran mata pelajaran di bawah untuk pengisian cepat:</div>
+                    <div class="tag-suggestions">
+                        <span class="tag-chip" onclick="app.setSubjectTag('SKI')">Mapel SKI</span>
+                        <span class="tag-chip" onclick="app.setSubjectTag('Al-Qur\'an Hadis')">Al-Qur'an Hadis</span>
+                        <span class="tag-chip" onclick="app.setSubjectTag('Akidah Akhlak')">Akidah Akhlak</span>
+                        <span class="tag-chip" onclick="app.setSubjectTag('Fikih')">Fikih</span>
+                        <span class="tag-chip" onclick="app.setSubjectTag('Bahasa Arab')">Bahasa Arab</span>
+                        <span class="tag-chip" onclick="app.setSubjectTag('Tematik')">Tematik</span>
+                        <span class="tag-chip" onclick="app.setSubjectTag('Matematika')">Matematika</span>
+                        <span class="tag-chip" onclick="app.setSubjectTag('PJOK')">PJOK</span>
+                        <span class="tag-chip" onclick="app.setSubjectTag('Bahasa Indonesia')">B. Indonesia</span>
+                        <span class="tag-chip" onclick="app.setSubjectTag('IPA')">IPA</span>
+                        <span class="tag-chip" onclick="app.setSubjectTag('IPS')">IPS</span>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="app.startAttendance()">Tampilkan Daftar Siswa</button>
+            </div>
+
+            <div id="attendance-list-container" class="hidden">
+                <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h4 id="att-info-title">Kelas 5</h4>
+                        <p style="font-size:0.8rem" id="att-info-sub">07 Okt 2026 | Mapel SKI</p>
+                    </div>
+                    <button class="btn btn-outline" style="width:auto; min-height:36px; padding:6px 14px;" onclick="app.resetAttendanceForm()">Ubah</button>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-bottom:16px;">
+                    <button class="btn btn-outline" onclick="app.markAllAttendance('H')">✅ Hadir Semua</button>
+                    <button class="btn btn-outline" style="border-color:var(--gold); color:var(--gold);" onclick="app.clearAllAttendance()">🔄 Reset Status</button>
+                </div>
+                
+                <div id="attendance-student-list" class="card" style="padding:0;">
+                    <!-- List siswa untuk absen -->
+                </div>
+
+                <div class="card" style="background:var(--gold-light); border:1px solid var(--gold);">
+                    <p style="font-size:0.88rem; color: #b45309;" id="att-status-msg">⚠️ Masih ada siswa yang belum memiliki status kehadiran.</p>
+                </div>
+
+                <button class="btn" style="margin-bottom: 30px;" onclick="app.saveAttendanceSession()">💾 Simpan Absensi Hari Ini</button>
+            </div>
+        </section>
+
+        <!-- View: History & Recap -->
+        <section id="view-history" class="view-section">
+            <div style="display:flex; gap:8px; margin-bottom:16px;">
+                <button class="btn" id="tab-hist" onclick="app.toggleHistoryTab('hist')">Riwayat Sesi</button>
+                <button class="btn btn-outline" id="tab-recap" onclick="app.toggleHistoryTab('recap')">Rekap Bulanan</button>
+                <button class="btn btn-outline" id="tab-stats" onclick="app.toggleHistoryTab('stats')">Statistik Tren</button>
+            </div>
+
+            <div id="tab-content-hist">
+                <h2 style="margin-bottom: 16px;">📅 Riwayat Sesi Absensi</h2>
+                <div class="form-group">
+                    <select class="form-control" id="hist-filter-class" onchange="app.renderHistory()">
+                        <option value="ALL">Semua Kelas</option>
+                    </select>
+                </div>
+                <div id="history-list">
+                    <!-- History cards -->
+                </div>
+            </div>
+
+            <div id="tab-content-recap" class="hidden">
+                <h2 style="margin-bottom: 16px;">📊 Rekapitulasi Bulanan</h2>
+                <div class="card">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Bulan & Tahun</label>
+                            <input type="month" class="form-control" id="recap-month" onchange="app.renderRecap()">
+                        </div>
+                        <div class="form-group">
+                            <label>Kelas</label>
+                            <select class="form-control" id="recap-class" onchange="app.renderRecap()"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card table-responsive">
+                    <table id="recap-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Siswa</th>
+                                <th>H</th><th>S</th><th>I</th><th>A</th><th>T</th>
+                                <th>% Hadir</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recap-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-content-stats" class="hidden">
+                <h2 style="margin-bottom: 16px;">📈 Grafik Kehadiran</h2>
+                <div class="form-group">
+                    <select class="form-control" id="stat-class" onchange="app.renderStats()">
+                        <!-- Classes -->
+                    </select>
+                </div>
+                <div class="card">
+                    <h3>Kehadiran 7 Sesi Terakhir</h3>
+                    <div class="chart-container" id="chart-area">
+                        <!-- Chart bars -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Interactive Main Menu -->
+        <section id="view-menu" class="view-section">
+            <h2 style="margin-bottom: 6px;">📁 Menu Utama Aplikasi</h2>
+            <p class="text-muted" style="margin-bottom: 20px; font-size:0.88rem;">Pilih fitur atau menu yang ingin Anda kelola:</p>
+
+            <div class="grid-2">
+                <div class="menu-grid-tile" id="menu-tile-guru" onclick="app.switchView('view-teachers')">
+                    <div class="menu-tile-icon" style="color:#0ea5e9;">👨‍🏫</div>
+                    <div class="menu-tile-title">Guru & Kepala Madrasah</div>
+                    <div class="menu-tile-desc">Kelola data guru pengajar & NIP Kepala Madrasah</div>
+                </div>
+
+                <div class="menu-grid-tile" onclick="app.switchView('view-students')">
+                    <div class="menu-tile-icon" style="color:#10b981;">👨‍🎓</div>
+                    <div class="menu-tile-title">Data Siswa</div>
+                    <div class="menu-tile-desc">Tambah, hapus, & import data siswa via Excel</div>
+                </div>
+
+                <div class="menu-grid-tile" onclick="app.switchView('view-attendance')">
+                    <div class="menu-tile-icon" style="color:#f59e0b;">📝</div>
+                    <div class="menu-tile-title">Absensi Harian</div>
+                    <div class="menu-tile-desc">Input kehadiran siswa per-tanggal & mata pelajaran</div>
+                </div>
+
+                <div class="menu-grid-tile" onclick="app.switchView('view-reports')">
+                    <div class="menu-tile-icon" style="color:#8b5cf6;">📄</div>
+                    <div class="menu-tile-title">Laporan & Cetak</div>
+                    <div class="menu-tile-desc">Laporan daftar kehadiran per-tanggal & bulanan</div>
+                </div>
+
+                <div class="menu-grid-tile" onclick="app.exportData('csv')">
+                    <div class="menu-tile-icon" style="color:#06b6d4;">📊</div>
+                    <div class="menu-tile-title">Export Data CSV</div>
+                    <div class="menu-tile-desc">Unduh ringkasan data absensi format CSV</div>
+                </div>
+
+                <div class="menu-grid-tile" id="menu-tile-backup" onclick="app.backupData()">
+                    <div class="menu-tile-icon" style="color:#3b82f6;">💾</div>
+                    <div class="menu-tile-title">Backup File JSON</div>
+                    <div class="menu-tile-desc">Cadangkan seluruh database aplikasi</div>
+                </div>
+
+                <div class="menu-grid-tile" id="menu-tile-restore" onclick="app.openModal('modal-restore')">
+                    <div class="menu-tile-icon" style="color:#ec4899;">📥</div>
+                    <div class="menu-tile-title">Restore Data JSON</div>
+                    <div class="menu-tile-desc">Pulihkan data absensi dari cadangan JSON</div>
+                </div>
+
+                <div class="menu-grid-tile" onclick="app.openModal('modal-developer')">
+                    <div class="menu-tile-icon" style="color:#84cc16;">👨‍💻</div>
+                    <div class="menu-tile-title">Profil Pengembang</div>
+                    <div class="menu-tile-desc">Informasi pengembang aplikasi & Madrasah</div>
+                </div>
+            </div>
+
+            <div class="card" id="menu-tile-maintenance" style="margin-top:20px; border-left: 5px solid var(--primary);">
+                <h3 style="margin-bottom:8px;">Pusat Data & Pemeliharaan</h3>
+                <p class="text-muted" style="font-size:0.85rem; margin-bottom:14px;">
+                    Data aplikasi tersimpan secara mandiri dan aman di browser lokal Anda.
+                </p>
+                <div class="grid-2">
+                    <button class="btn btn-outline" onclick="app.loadDemoData()">Isi Data Demo</button>
+                    <button class="btn btn-danger" onclick="app.resetAllData()">Reset Database</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Settings (Includes Admin Account & Class Password Settings) -->
+        <section id="view-settings" class="view-section">
+            <h2 style="margin-bottom: 16px;">⚙️ Pengaturan & Akun Login Kelas</h2>
+            
+            <!-- ADMIN ACCOUNT MANAGEMENT CARD -->
+            <div class="card" style="border-left: 5px solid var(--gold);">
+                <h3 style="margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+                    <span>🔑</span> Pengaturan Akun Login Admin & Kelas
+                </h3>
+                <p class="text-muted" style="font-size:0.82rem; margin-bottom:16px;">
+                    Atur nama pengguna (username) dan kata sandi (password) untuk Login Admin dan Login tiap-tiap Kelas.
+                </p>
+
+                <!-- Admin Password Settings -->
+                <div style="background:var(--bg-color); padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
+                    <h4 style="font-size:0.95rem; margin-bottom:10px; color:var(--primary-dark);">🔐 Akun Login Administrator</h4>
+                    <div class="grid-2">
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Username Admin</label>
+                            <input type="text" class="form-control" id="set-admin-user">
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label>Password Admin</label>
+                            <input type="password" class="form-control" id="set-admin-pass">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Class Password Settings List -->
+                <h4 style="font-size:0.95rem; margin-bottom:10px;">🏫 Username & Password Login Wali Kelas:</h4>
+                <div id="class-credentials-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+                    <!-- Injected dynamically via JS -->
+                </div>
+
+                <button class="btn btn-gold" onclick="app.saveAccountCredentials()">💾 Simpan Sandi Admin & Kelas</button>
+            </div>
+
+            <!-- SCHOOL PROFILE SETTINGS CARD -->
+            <div class="card">
+                <h3 style="margin-bottom:14px;">Profil Madrasah & Guru</h3>
+                <div class="form-group">
+                    <label>Nama Madrasah / Sekolah</label>
+                    <input type="text" class="form-control" id="set-school">
+                </div>
+                <div class="form-group">
+                    <label>Nama Guru Pengajar Utama</label>
+                    <input type="text" class="form-control" id="set-teacher">
+                </div>
+                <div class="form-group">
+                    <label>NIP / NIK Guru Utama</label>
+                    <input type="text" class="form-control" id="set-nip">
+                </div>
+                <div class="form-group">
+                    <label>Nama Kepala Madrasah</label>
+                    <input type="text" class="form-control" id="set-headmaster">
+                </div>
+                <div class="form-group">
+                    <label>NIP / NUPTK Kepala Madrasah</label>
+                    <input type="text" class="form-control" id="set-headmaster-nip">
+                </div>
+                <div class="form-group">
+                    <label>Tema Tampilan Aplikasi</label>
+                    <select class="form-control" id="set-theme" onchange="app.changeTheme(this.value)">
+                        <option value="light">Mode Terang (Light)</option>
+                        <option value="dark">Mode Gelap (Dark)</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="app.saveSettings()">💾 Simpan Pengaturan Profil</button>
+            </div>
+            
+            <div class="card">
+                <h3>Kelola Daftar Kelas</h3>
+                <div style="display:flex; gap:8px; margin-top:12px; margin-bottom:16px;">
+                    <input type="text" class="form-control" id="new-class-name" placeholder="Nama kelas baru (misal: Kelas 1)">
+                    <button class="btn" style="width:auto" onclick="app.addClass()">Tambah</button>
+                </div>
+                <div id="settings-class-list"></div>
+            </div>
+        </section>
+
+        <!-- View: Reports -->
+        <section id="view-reports" class="view-section">
+            <h2 style="margin-bottom: 16px;" class="hide-print">📄 Laporan Kehadiran Per-Tanggal / Bulanan</h2>
+            
+            <div class="card hide-print">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Jenis Laporan</label>
+                        <select class="form-control" id="rep-type" onchange="app.generateReport()">
+                            <option value="monthly_matrix">Laporan Bulanan Per-Tanggal (Matriks 1-31)</option>
+                            <option value="daily_detail">Laporan Detail Per-Tanggal (Harian)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Bulan & Tahun Laporan</label>
+                        <input type="month" class="form-control" id="rep-month" onchange="app.generateReport()">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Pilih Kelas</label>
+                        <select class="form-control" id="rep-class" onchange="app.generateReport()"></select>
+                    </div>
+                    <div class="form-group" id="rep-date-picker-group">
+                        <label>Tanggal Spesifik (Untuk Detail Harian)</label>
+                        <input type="date" class="form-control" id="rep-date" onchange="app.generateReport()">
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top:8px;">
+                    <button class="btn" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+                    <button class="btn btn-gold" onclick="app.exportReportToExcel()">📊 Download Excel Laporan</button>
+                </div>
+            </div>
+
+            <div class="print-area card" id="print-container">
+                <!-- Injected dynamically via JS -->
+            </div>
+        </section>
+
+    </div> <!-- End Container -->
+
+
+    <!-- MODAL: LOGIN -->
+    <div class="modal-overlay" id="modal-login">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="login-modal-title">🔐 Login Ke Aplikasi</h3>
+                <button class="close-modal" onclick="app.closeModal('modal-login')">&times;</button>
+            </div>
+            <form onsubmit="event.preventDefault(); app.submitLogin();">
+                <input type="hidden" id="login-role" value="admin">
+                <input type="hidden" id="login-target-class" value="">
+
+                <div style="text-align:center; margin-bottom:16px;">
+                    <div style="font-size:3rem; margin-bottom:6px;" id="login-modal-icon">🔐</div>
+                    <p style="font-size:0.88rem;" id="login-modal-subtitle">Silakan masukkan username dan password untuk melanjutkan.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" class="form-control" id="login-username" placeholder="Masukkan username..." required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" id="login-password" placeholder="Masukkan password..." required>
+                </div>
+
+                <div style="display:flex; justify-style:space-between; align-items:center; background:var(--bg-color); padding:10px 14px; border-radius:10px; margin-bottom:18px; font-size:0.78rem; color:var(--text-muted);">
+                    <span>Default Admin: admin / admin123</span>
+                    <span>Default Kelas: kelas1..6 / 123</span>
+                </div>
+
+                <button type="submit" class="btn btn-gold">🚀 Masuk Aplikasi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD/EDIT STUDENT -->
+    <div class="modal-overlay" id="modal-student">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="student-modal-title">➕ Tambah Data Siswa</h3>
+                <button class="close-modal" onclick="app.closeModal('modal-student')">&times;</button>
+            </div>
+            <form onsubmit="event.preventDefault(); app.saveStudent();">
+                <input type="hidden" id="student-id">
+                <div class="form-group">
+                    <label>NIS / NISN</label>
+                    <input type="text" class="form-control" id="student-nis" placeholder="Nomor Induk Siswa" required>
+                </div>
+                <div class="form-group">
+                    <label>Nama Lengkap Siswa</label>
+                    <input type="text" class="form-control" id="student-name" placeholder="Nama lengkap siswa" required>
+                </div>
+                <div class="form-group">
+                    <label>Jenis Kelamin</label>
+                    <select class="form-control" id="student-gender">
+                        <option value="L">Laki-laki (L)</option>
+                        <option value="P">Perempuan (P)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Kelas</label>
+                    <select class="form-control" id="student-class">
+                        <!-- Options -->
+                    </select>
+                </div>
+                <button type="submit" class="btn">💾 Simpan Siswa</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD/EDIT TEACHER -->
+    <div class="modal-overlay" id="modal-teacher">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="teacher-modal-title">👨‍🏫 Tambah Data Guru</h3>
+                <button class="close-modal" onclick="app.closeModal('modal-teacher')">&times;</button>
+            </div>
+            <form onsubmit="event.preventDefault(); app.saveTeacher();">
+                <input type="hidden" id="teacher-id">
+                <div class="form-group">
+                    <label>Nama Lengkap Guru (dengan Gelar)</label>
+                    <input type="text" class="form-control" id="teacher-name" placeholder="Contoh: Abdullah S. Kaharu, S.Pd" required>
+                </div>
+                <div class="form-group">
+                    <label>NIP / NUPTK / NIK</label>
+                    <input type="text" class="form-control" id="teacher-nip" placeholder="Isi NIP atau '-' jika non-PNS">
+                </div>
+                <div class="form-group">
+                    <label>Jabatan / Wali Kelas</label>
+                    <input type="text" class="form-control" id="teacher-role" placeholder="Contoh: Wali Kelas 5 / Guru SKI">
+                </div>
+                <button type="submit" class="btn">💾 Simpan Data Guru</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT HEADMASTER -->
+    <div class="modal-overlay" id="modal-headmaster">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🕌 Data Kepala Madrasah</h3>
+                <button class="close-modal" onclick="app.closeModal('modal-headmaster')">&times;</button>
+            </div>
+            <form onsubmit="event.preventDefault(); app.saveHeadmaster();">
+                <div class="form-group">
+                    <label>Nama Kepala Madrasah (dengan Gelar)</label>
+                    <input type="text" class="form-control" id="hm-name" placeholder="Nama Kepala Madrasah" required>
+                </div>
+                <div class="form-group">
+                    <label>NIP / NUPTK Kepala Madrasah</label>
+                    <input type="text" class="form-control" id="hm-nip" placeholder="NIP Kepala Madrasah">
+                </div>
+                <button type="submit" class="btn btn-gold">💾 Simpan Kepala Madrasah</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: DEVELOPER PROFILE -->
+    <div class="modal-overlay" id="modal-developer">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>👨‍💻 Profil Pengembang Aplikasi</h3>
+                <button class="close-modal" onclick="app.closeModal('modal-developer')">&times;</button>
+            </div>
+            <div style="text-align: center; padding: 10px 0;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 12px auto; box-shadow: 0 8px 20px rgba(5, 150, 105, 0.35);">
+                    👨‍🏫
+                </div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 4px;">Abdullah S. Kaharu, S.Pd</h3>
+                <p style="color: var(--primary); font-weight: 700; font-size: 0.9rem; margin-bottom: 12px;">Guru & Pengembang Aplikasi Absensi Digital</p>
+
+                <div style="background: var(--bg-color); padding: 14px; border-radius: 12px; border: 1px solid var(--border); text-align: left; font-size: 0.88rem; margin-bottom: 16px;">
+                    <div style="margin-bottom: 6px;"><strong>🏫 Lembaga:</strong> MIS Al-Awwaliyah Karyamukti</div>
+                    <div style="margin-bottom: 6px;"><strong>📍 Kecamatan:</strong> Mootilango</div>
+                    <div style="margin-bottom: 6px;"><strong>🏛️ Kabupaten:</strong> Gorontalo</div>
+                    <div style="margin-bottom: 6px;"><strong>📱 Versi Aplikasi:</strong> v3.0 Digital Attendance (2026)</div>
+                </div>
+
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 18px;">
+                    Aplikasi ini dirancang khusus untuk memudahkan pengelolaan data kehadiran siswa Madrasah Ibtidaiyah secara efisien, akurat, dan modern.
+                </p>
+
+                <button class="btn" onclick="app.closeModal('modal-developer')">Tutup Profil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RESTORE DATA -->
+    <div class="modal-overlay" id="modal-restore">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📥 Restore Database JSON</h3>
+                <button class="close-modal" onclick="app.closeModal('modal-restore')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Pilih File Cadangan (.json)</label>
+                <input type="file" id="restore-file-input" class="form-control" accept=".json">
+            </div>
+            <button class="btn btn-gold" onclick="app.handleRestoreJSON()">📥 Pulihkan Database Now</button>
+        </div>
+    </div>
+
+    <nav class="bottom-nav hide-print">
+        <a class="nav-item active" data-target="view-dashboard" onclick="app.switchView('view-dashboard')">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            Dashboard
+        </a>
+        <a class="nav-item" data-target="view-students" onclick="app.switchView('view-students')">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            Siswa
+        </a>
+        <a class="nav-item" data-target="view-attendance" onclick="app.switchView('view-attendance')">
+            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            Absensi
+        </a>
+        <a class="nav-item" data-target="view-history" onclick="app.switchView('view-history')">
+            <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+            Riwayat
+        </a>
+        <a class="nav-item" data-target="view-menu" onclick="app.switchView('view-menu')">
+            <svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+            Menu
+        </a>
+    </nav>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        class AttendanceApp {
+            constructor() {
+                this.db = {
+                    settings: {
+                        schoolName: "MIS Al-Awwaliyah Karyamukti",
+                        teacherName: "Abdullah S. Kaharu, S.Pd",
+                        teacherNip: "198506122010011005",
+                        headmasterName: "Hj. Siti Rahmah, M.Pd.I",
+                        headmasterNip: "197203151998032001",
+                        classes: ["Kelas 1", "Kelas 2", "Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"],
+                        theme: "light"
+                    },
+                    auth: {
+                        currentUser: null, // { role: 'admin' | 'class', classId: 'Kelas 5', username: '...' }
+                        adminCreds: { username: "admin", password: "admin123" },
+                        classCreds: {
+                            "Kelas 1": { username: "kelas1", password: "123" },
+                            "Kelas 2": { username: "kelas2", password: "123" },
+                            "Kelas 3": { username: "kelas3", password: "123" },
+                            "Kelas 4": { username: "kelas4", password: "123" },
+                            "Kelas 5": { username: "kelas5", password: "123" },
+                            "Kelas 6": { username: "kelas6", password: "123" }
+                        }
+                    },
+                    teachers: [],
+                    students: [],
+                    sessions: []
+                };
+
+                this.currentAttendance = {
+                    date: '',
+                    classId: '',
+                    teacher: '',
+                    subject: '',
+                    records: {}
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.loadFromStorage();
+                this.applyTheme(this.db.settings.theme);
+                this.updateHeaderTime();
+                setInterval(() => this.updateHeaderTime(), 30000);
+
+                this.initCoverClassButtons();
+                this.updateAuthBadge();
+
+                // Set initial date in attendance setup
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('att-date').value = today;
+                document.getElementById('rep-date').value = today;
+                
+                const currentMonth = new Date().toISOString().slice(0, 7);
+                document.getElementById('recap-month').value = currentMonth;
+                document.getElementById('rep-month').value = currentMonth;
+
+                this.populateClassDropdowns();
+                this.populateTeacherDropdown();
+
+                this.renderDashboardStats();
+                this.renderAccountCredentialsSettings();
+            }
+
+            loadFromStorage() {
+                const saved = localStorage.getItem('mis_absensi_data_v3');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        this.db = { ...this.db, ...parsed };
+                        if (!this.db.auth) {
+                            this.db.auth = {
+                                currentUser: null,
+                                adminCreds: { username: "admin", password: "admin123" },
+                                classCreds: {
+                                    "Kelas 1": { username: "kelas1", password: "123" },
+                                    "Kelas 2": { username: "kelas2", password: "123" },
+                                    "Kelas 3": { username: "kelas3", password: "123" },
+                                    "Kelas 4": { username: "kelas4", password: "123" },
+                                    "Kelas 5": { username: "kelas5", password: "123" },
+                                    "Kelas 6": { username: "kelas6", password: "123" }
+                                }
+                            };
+                        }
+                    } catch (e) {
+                        console.error("Failed to parse local storage data", e);
+                    }
+                } else {
+                    this.loadDemoData(false);
+                }
+            }
+
+            saveToStorage() {
+                localStorage.setItem('mis_absensi_data_v3', JSON.stringify(this.db));
+            }
+
+            updateHeaderTime() {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+                const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const el = document.getElementById('header-date');
+                if (el) el.innerText = `${now.toLocaleDateString('id-ID', options)} | ${timeStr}`;
+            }
+
+            initCoverClassButtons() {
+                const container = document.getElementById('cover-class-buttons');
+                if (!container) return;
+
+                container.innerHTML = '';
+                this.db.settings.classes.forEach(cls => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-class-login';
+                    btn.onclick = () => this.openLoginModal('class', cls);
+                    btn.innerHTML = `
+                        <span style="font-size:1.2rem;">🏫</span>
+                        <span>${cls}</span>
+                    `;
+                    container.appendChild(btn);
+                });
+            }
+
+            openLoginModal(role, targetClass = '') {
+                document.getElementById('login-role').value = role;
+                document.getElementById('login-target-class').value = targetClass;
+                document.getElementById('login-username').value = '';
+                document.getElementById('login-password').value = '';
+
+                const title = document.getElementById('login-modal-title');
+                const sub = document.getElementById('login-modal-subtitle');
+                const icon = document.getElementById('login-modal-icon');
+
+                if (role === 'admin') {
+                    title.innerText = '🔐 Login Administrator';
+                    sub.innerText = 'Masukkan akun admin untuk mengelola seluruh data & password kelas.';
+                    icon.innerText = '🔐';
+                    
+                    const adminCreds = this.db.auth?.adminCreds || { username: 'admin' };
+                    document.getElementById('login-username').value = adminCreds.username;
+                } else {
+                    title.innerText = `🏫 Login Wali ${targetClass}`;
+                    sub.innerText = `Masukkan akun login khusus untuk ${targetClass}.`;
+                    icon.innerText = '🏫';
+
+                    const classCreds = this.db.auth?.classCreds?.[targetClass] || { username: targetClass.toLowerCase().replace(/\s+/g, '') };
+                    document.getElementById('login-username').value = classCreds.username;
+                }
+
+                this.openModal('modal-login');
+            }
+
+            submitLogin() {
+                const role = document.getElementById('login-role').value;
+                const targetClass = document.getElementById('login-target-class').value;
+                const user = document.getElementById('login-username').value.trim();
+                const pass = document.getElementById('login-password').value.trim();
+
+                if (role === 'admin') {
+                    const adminCreds = this.db.auth?.adminCreds || { username: 'admin', password: 'admin123' };
+                    if (user === adminCreds.username && pass === adminCreds.password) {
+                        this.db.auth.currentUser = { role: 'admin', classId: null, username: user };
+                        this.saveToStorage();
+                        this.showToast(`Selamat Datang Admin (${user})!`, 'success');
+                        this.closeModal('modal-login');
+                        this.enterApp();
+                    } else {
+                        this.showToast('Username atau Password Admin salah!', 'error');
+                    }
+                } else {
+                    const classCreds = this.db.auth?.classCreds?.[targetClass] || { username: targetClass.toLowerCase().replace(/\s+/g, ''), password: '123' };
+                    if (user === classCreds.username && pass === classCreds.password) {
+                        this.db.auth.currentUser = { role: 'class', classId: targetClass, username: user };
+                        this.saveToStorage();
+                        this.showToast(`Berhasil Login sebagai Wali ${targetClass}!`, 'success');
+                        this.closeModal('modal-login');
+                        this.enterApp();
+                    } else {
+                        this.showToast(`Username atau Password ${targetClass} salah!`, 'error');
+                    }
+                }
+            }
+
+            logout() {
+                this.db.auth.currentUser = null;
+                this.saveToStorage();
+                this.updateAuthBadge();
+                this.showCover();
+                this.showToast('Anda telah keluar dari akun.', 'success');
+            }
+
+            updateAuthBadge() {
+                const badge = document.getElementById('header-user-badge');
+                const roleSpan = document.getElementById('header-user-role');
+                const user = this.db.auth?.currentUser;
+
+                if (!user) {
+                    roleSpan.innerText = 'Tamu / Cover';
+                    badge.style.background = 'rgba(255,255,255,0.2)';
+                } else if (user.role === 'admin') {
+                    roleSpan.innerText = `Admin (${user.username})`;
+                    badge.style.background = '#d97706';
+                } else {
+                    roleSpan.innerText = `Wali ${user.classId}`;
+                    badge.style.background = '#059669';
+                }
+            }
+
+            enterApp() {
+                document.body.classList.remove('cover-active');
+                document.getElementById('cover-screen').style.display = 'none';
+                
+                this.updateAuthBadge();
+                this.applyRoleRestrictions();
+
+                const user = this.db.auth?.currentUser;
+                if (user && user.role === 'class') {
+                    this.switchView('view-students');
+                } else {
+                    this.switchView('view-dashboard');
+                }
+            }
+
+            showCover() {
+                document.body.classList.add('cover-active');
+                document.getElementById('cover-screen').style.display = 'flex';
+            }
+
+            applyRoleRestrictions() {
+                const user = this.db.auth?.currentUser;
+                const classSelects = ['dash-class-select', 'att-class', 'filter-class-siswa', 'hist-filter-class', 'recap-class', 'stat-class', 'rep-class'];
+                
+                const settingsBtn = document.getElementById('btn-header-settings');
+                const teacherBtnDash = document.getElementById('btn-dash-teachers');
+                const menuTileGuru = document.getElementById('menu-tile-guru');
+                const menuTileBackup = document.getElementById('menu-tile-backup');
+                const menuTileRestore = document.getElementById('menu-tile-restore');
+                const menuMaintenance = document.getElementById('menu-tile-maintenance');
+
+                if (user && user.role === 'class') {
+                    classSelects.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.value = user.classId;
+                            el.disabled = true;
+                        }
+                    });
+
+                    if (settingsBtn) settingsBtn.style.display = 'none';
+                    if (teacherBtnDash) teacherBtnDash.style.display = 'none';
+                    if (menuTileGuru) menuTileGuru.style.display = 'none';
+                    if (menuTileBackup) menuTileBackup.style.display = 'none';
+                    if (menuTileRestore) menuTileRestore.style.display = 'none';
+                    if (menuMaintenance) menuMaintenance.style.display = 'none';
+
+                } else {
+                    classSelects.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.disabled = false;
+                    });
+
+                    if (settingsBtn) settingsBtn.style.display = 'flex';
+                    if (teacherBtnDash) teacherBtnDash.style.display = 'inline-flex';
+                    if (menuTileGuru) menuTileGuru.style.display = 'flex';
+                    if (menuTileBackup) menuTileBackup.style.display = 'flex';
+                    if (menuTileRestore) menuTileRestore.style.display = 'flex';
+                    if (menuMaintenance) menuMaintenance.style.display = 'block';
+                }
+
+                this.renderDashboardStats();
+                this.renderStudents();
+            }
+
+            renderAccountCredentialsSettings() {
+                const container = document.getElementById('class-credentials-list');
+                if (!container) return;
+
+                const adminCreds = this.db.auth?.adminCreds || { username: 'admin', password: 'admin123' };
+                document.getElementById('set-admin-user').value = adminCreds.username;
+                document.getElementById('set-admin-pass').value = adminCreds.password;
+
+                container.innerHTML = '';
+                this.db.settings.classes.forEach(cls => {
+                    const creds = this.db.auth?.classCreds?.[cls] || { 
+                        username: cls.toLowerCase().replace(/\s+/g, ''), 
+                        password: '123' 
+                    };
+
+                    const row = document.createElement('div');
+                    row.className = 'grid-2';
+                    row.style.background = 'var(--bg-color)';
+                    row.style.padding = '10px 14px';
+                    row.style.borderRadius = '10px';
+                    row.style.border = '1px solid var(--border)';
+                    row.style.alignItems = 'center';
+
+                    row.innerHTML = `
+                        <div>
+                            <strong style="color:var(--primary); font-size:0.92rem;">🏫 ${cls}</strong>
+                            <div class="form-group" style="margin-top:6px; margin-bottom:0;">
+                                <label style="font-size:0.75rem;">Username ${cls}</label>
+                                <input type="text" class="form-control class-cred-user" data-class="${cls}" value="${creds.username}">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group" style="margin-top:20px; margin-bottom:0;">
+                                <label style="font-size:0.75rem;">Password ${cls}</label>
+                                <input type="password" class="form-control class-cred-pass" data-class="${cls}" value="${creds.password}">
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            saveAccountCredentials() {
+                const adminUser = document.getElementById('set-admin-user').value.trim();
+                const adminPass = document.getElementById('set-admin-pass').value.trim();
+
+                if (!adminUser || !adminPass) {
+                    this.showToast('Username & Password Admin tidak boleh kosong!', 'error');
+                    return;
+                }
+
+                this.db.auth.adminCreds = { username: adminUser, password: adminPass };
+
+                const classCreds = {};
+                const userInputs = document.querySelectorAll('.class-cred-user');
+
+                userInputs.forEach(uInput => {
+                    const cls = uInput.dataset.class;
+                    const pInput = document.querySelector(`.class-cred-pass[data-class="${cls}"]`);
+                    classCreds[cls] = {
+                        username: uInput.value.trim() || cls.toLowerCase().replace(/\s+/g, ''),
+                        password: pInput.value.trim() || '123'
+                    };
+                });
+
+                this.db.auth.classCreds = classCreds;
+                this.saveToStorage();
+                this.showToast('Username & Password Admin serta Kelas berhasil disimpan!', 'success');
+            }
+
+            populateClassDropdowns() {
+                const selects = [
+                    { id: 'dash-class-select', all: true },
+                    { id: 'filter-class-siswa', all: true },
+                    { id: 'att-class', all: false },
+                    { id: 'hist-filter-class', all: true },
+                    { id: 'recap-class', all: false },
+                    { id: 'stat-class', all: false },
+                    { id: 'rep-class', all: false },
+                    { id: 'student-class', all: false }
+                ];
+
+                selects.forEach(s => {
+                    const el = document.getElementById(s.id);
+                    if (!el) return;
+                    el.innerHTML = '';
+                    if (s.all) {
+                        el.appendChild(new Option("Semua Kelas", "ALL"));
+                    }
+                    this.db.settings.classes.forEach(cls => {
+                        el.appendChild(new Option(cls, cls));
+                    });
+                });
+            }
+
+            populateTeacherDropdown() {
+                const el = document.getElementById('att-teacher');
+                if (!el) return;
+                el.innerHTML = '';
+                
+                if (this.db.teachers.length === 0) {
+                    el.appendChild(new Option(this.db.settings.teacherName, this.db.settings.teacherName));
+                } else {
+                    this.db.teachers.forEach(t => {
+                        el.appendChild(new Option(t.name, t.name));
+                    });
+                }
+            }
+
+            renderDashboardStats() {
+                document.getElementById('dash-school-name').innerText = this.db.settings.schoolName;
+                document.getElementById('dash-teacher-name').innerText = this.db.settings.teacherName;
+                document.getElementById('dash-total-siswa').innerText = this.db.students.length;
+                document.getElementById('dash-active-class').innerText = this.db.settings.classes.length;
+
+                const selectedClass = document.getElementById('dash-class-select').value || 'ALL';
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('dash-stat-date').innerText = today;
+
+                const sessionsToday = this.db.sessions.filter(s => s.date === today && (selectedClass === 'ALL' || s.classId === selectedClass));
+
+                let counts = { H: 0, S: 0, I: 0, A: 0, T: 0 };
+                let totalRecords = 0;
+
+                sessionsToday.forEach(sess => {
+                    Object.values(sess.records).forEach(status => {
+                        if (counts[status] !== undefined) counts[status]++;
+                        totalRecords++;
+                    });
+                });
+
+                document.getElementById('dash-count-h').innerText = counts.H;
+                document.getElementById('dash-count-s').innerText = counts.S;
+                document.getElementById('dash-count-i').innerText = counts.I;
+                document.getElementById('dash-count-a').innerText = counts.A;
+
+                const pct = totalRecords > 0 ? Math.round(((counts.H + counts.T) / totalRecords) * 100) : 0;
+                document.getElementById('dash-pct-num').innerText = `${pct}%`;
+                document.getElementById('dash-progress').style.width = `${pct}%`;
+                document.getElementById('dash-pct-text').innerText = totalRecords > 0 
+                    ? `Dari ${totalRecords} data kehadiran hari ini` 
+                    : "Belum ada absensi hari ini";
+            }
+
+            renderTeachers() {
+                const list = document.getElementById('teacher-list');
+                const search = document.getElementById('search-guru').value.toLowerCase();
+                
+                document.getElementById('hm-display-name').innerText = this.db.settings.headmasterName || '-- Belum Diatur --';
+                document.getElementById('hm-display-nip').innerText = `NIP: ${this.db.settings.headmasterNip || '-'}`;
+
+                list.innerHTML = '';
+                const filtered = this.db.teachers.filter(t => t.name.toLowerCase().includes(search) || (t.nip && t.nip.includes(search)));
+
+                if (filtered.length === 0) {
+                    list.innerHTML = `<p class="text-muted" style="text-align:center; padding:20px;">Belum ada data guru pengajar.</p>`;
+                    return;
+                }
+
+                filtered.forEach(t => {
+                    const item = document.createElement('div');
+                    item.className = 'student-item';
+                    item.innerHTML = `
+                        <div class="student-info">
+                            <div>
+                                <div class="student-name">${t.name}</div>
+                                <div class="student-nis">NIP: ${t.nip || '-'} | Jabatan: ${t.role || 'Guru Pengajar'}</div>
+                            </div>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn btn-outline" style="width:auto; min-height:36px; padding:4px 10px;" onclick="app.editTeacher('${t.id}')">✏️</button>
+                                <button class="btn btn-danger" style="width:auto; min-height:36px; padding:4px 10px;" onclick="app.deleteTeacher('${t.id}')">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+
+            renderStudents() {
+                const list = document.getElementById('student-list');
+                const filterClass = document.getElementById('filter-class-siswa').value;
+                const search = document.getElementById('search-siswa').value.toLowerCase();
+                const user = this.db.auth?.currentUser;
+
+                list.innerHTML = '';
+                const filtered = this.db.students.filter(s => {
+                    let matchClass = filterClass === 'ALL' || s.classId === filterClass;
+                    if (user && user.role === 'class') {
+                        matchClass = (s.classId === user.classId);
+                    }
+                    const matchSearch = s.name.toLowerCase().includes(search) || s.nis.includes(search);
+                    return matchClass && matchSearch;
+                });
+
+                if (filtered.length === 0) {
+                    list.innerHTML = `<p class="text-muted" style="text-align:center; padding:20px;">Tidak ada data siswa ditemukan.</p>`;
+                    return;
+                }
+
+                filtered.forEach(s => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.marginBottom = '10px';
+                    card.innerHTML = `
+                        <div style="display:flex; justify-style:space-between; align-items:center;">
+                            <div>
+                                <div style="font-weight:700; font-size:1.05rem;">${s.name} (${s.gender || 'L'})</div>
+                                <div style="font-size:0.82rem; color:var(--text-muted);">NIS: ${s.nis} | ${s.classId}</div>
+                            </div>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn btn-outline" style="width:auto; min-height:36px; padding:4px 10px;" onclick="app.editStudent('${s.id}')">✏️</button>
+                                <button class="btn btn-danger" style="width:auto; min-height:36px; padding:4px 10px;" onclick="app.deleteStudent('${s.id}')">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            }
+
+            saveStudent() {
+                const id = document.getElementById('student-id').value;
+                const nis = document.getElementById('student-nis').value.trim();
+                const name = document.getElementById('student-name').value.trim();
+                const gender = document.getElementById('student-gender').value;
+                const classId = document.getElementById('student-class').value;
+
+                if (!nis || !name) {
+                    this.showToast('Mohon isi NIS dan Nama Siswa!', 'error');
+                    return;
+                }
+
+                if (id) {
+                    const index = this.db.students.findIndex(s => s.id === id);
+                    if (index !== -1) {
+                        this.db.students[index] = { id, nis, name, gender, classId };
+                        this.showToast('Data siswa berhasil diperbarui', 'success');
+                    }
+                } else {
+                    const newStudent = { id: 'STU-' + Date.now(), nis, name, gender, classId };
+                    this.db.students.push(newStudent);
+                    this.showToast('Siswa baru berhasil ditambahkan', 'success');
+                }
+
+                this.saveToStorage();
+                this.closeModal('modal-student');
+                this.renderStudents();
+                this.renderDashboardStats();
+            }
+
+            editStudent(id) {
+                const s = this.db.students.find(item => item.id === id);
+                if (!s) return;
+
+                document.getElementById('student-id').value = s.id;
+                document.getElementById('student-nis').value = s.nis;
+                document.getElementById('student-name').value = s.name;
+                document.getElementById('student-gender').value = s.gender || 'L';
+                document.getElementById('student-class').value = s.classId;
+                document.getElementById('student-modal-title').innerText = '✏️ Edit Data Siswa';
+
+                this.openModal('modal-student');
+            }
+
+            deleteStudent(id) {
+                if (confirm('Apakah Anda yakin ingin menghapus siswa ini?')) {
+                    this.db.students = this.db.students.filter(s => s.id !== id);
+                    this.saveToStorage();
+                    this.renderStudents();
+                    this.renderDashboardStats();
+                    this.showToast('Siswa telah dihapus', 'success');
+                }
+            }
+
+            saveTeacher() {
+                const id = document.getElementById('teacher-id').value;
+                const name = document.getElementById('teacher-name').value.trim();
+                const nip = document.getElementById('teacher-nip').value.trim();
+                const role = document.getElementById('teacher-role').value.trim();
+
+                if (!name) {
+                    this.showToast('Nama Guru wajib diisi!', 'error');
+                    return;
+                }
+
+                if (id) {
+                    const idx = this.db.teachers.findIndex(t => t.id === id);
+                    if (idx !== -1) {
+                        this.db.teachers[idx] = { id, name, nip, role };
+                        this.showToast('Data guru berhasil diubah', 'success');
+                    }
+                } else {
+                    this.db.teachers.push({ id: 'TCH-' + Date.now(), name, nip, role });
+                    this.showToast('Guru berhasil ditambahkan', 'success');
+                }
+
+                this.saveToStorage();
+                this.populateTeacherDropdown();
+                this.renderTeachers();
+                this.closeModal('modal-teacher');
+            }
+
+            editTeacher(id) {
+                const t = this.db.teachers.find(item => item.id === id);
+                if (!t) return;
+
+                document.getElementById('teacher-id').value = t.id;
+                document.getElementById('teacher-name').value = t.name;
+                document.getElementById('teacher-nip').value = t.nip || '';
+                document.getElementById('teacher-role').value = t.role || '';
+                document.getElementById('teacher-modal-title').innerText = '✏️ Edit Data Guru';
+
+                this.openModal('modal-teacher');
+            }
+
+            deleteTeacher(id) {
+                if (confirm('Hapus guru ini dari daftar?')) {
+                    this.db.teachers = this.db.teachers.filter(t => t.id !== id);
+                    this.saveToStorage();
+                    this.populateTeacherDropdown();
+                    this.renderTeachers();
+                    this.showToast('Data guru terhapus', 'success');
+                }
+            }
+
+            saveHeadmaster() {
+                const name = document.getElementById('hm-name').value.trim();
+                const nip = document.getElementById('hm-nip').value.trim();
+
+                this.db.settings.headmasterName = name;
+                this.db.settings.headmasterNip = nip;
+                this.saveToStorage();
+                this.renderTeachers();
+                this.closeModal('modal-headmaster');
+                this.showToast('Data Kepala Madrasah berhasil diperbarui', 'success');
+            }
+
+            triggerExcelUpload() {
+                document.getElementById('excel-file-input').click();
+            }
+
+            downloadExcelTemplate() {
+                const templateData = [
+                    ["NIS", "Nama Siswa", "Jenis Kelamin (L/P)", "Kelas"],
+                    ["1001", "Ahmad Fauzi", "L", "Kelas 5"],
+                    ["1002", "Siti Nurhaliza", "P", "Kelas 5"],
+                    ["1003", "Muhammad Rizky", "L", "Kelas 5"]
+                ];
+
+                const ws = XLSX.utils.aoa_to_sheet(templateData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Template_Siswa");
+                XLSX.writeFile(wb, "Template_Import_Siswa_MIS.xlsx");
+            }
+
+            handleExcelUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const user = this.db.auth?.currentUser;
+
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const data = new Uint8Array(evt.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                        let count = 0;
+                        for (let i = 1; i < rows.length; i++) {
+                            const row = rows[i];
+                            if (row && row[0] && row[1]) {
+                                const nis = String(row[0]).trim();
+                                const name = String(row[1]).trim();
+                                const gender = row[2] ? String(row[2]).trim().toUpperCase() : 'L';
+                                let classId = row[3] ? String(row[3]).trim() : 'Kelas 5';
+
+                                if (user && user.role === 'class') {
+                                    classId = user.classId;
+                                }
+
+                                this.db.students.push({
+                                    id: 'STU-' + Date.now() + '-' + i,
+                                    nis, name, gender, classId
+                                });
+                                count++;
+                            }
+                        }
+
+                        this.saveToStorage();
+                        this.renderStudents();
+                        this.renderDashboardStats();
+                        this.showToast(`Berhasil mengimpor ${count} siswa dari Excel!`, 'success');
+                    } catch (err) {
+                        this.showToast('Gagal membaca file Excel. Pastikan format sesuai template.', 'error');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            setSubjectTag(tag) {
+                document.getElementById('att-subject').value = 'Mapel ' + tag;
+            }
+
+            startAttendance() {
+                const date = document.getElementById('att-date').value;
+                let classId = document.getElementById('att-class').value;
+                const teacher = document.getElementById('att-teacher').value;
+                const subject = document.getElementById('att-subject').value.trim() || 'Umum';
+
+                const user = this.db.auth?.currentUser;
+                if (user && user.role === 'class') {
+                    classId = user.classId;
+                }
+
+                if (!date || !classId) {
+                    this.showToast('Pilih Tanggal dan Kelas terlebih dahulu!', 'error');
+                    return;
+                }
+
+                this.currentAttendance = {
+                    date, classId, teacher, subject,
+                    records: {}
+                };
+
+                const existing = this.db.sessions.find(s => s.date === date && s.classId === classId && s.subject === subject);
+                if (existing) {
+                    this.currentAttendance.records = { ...existing.records };
+                    this.showToast('Memuat sesi absensi yang sudah tersimpan', 'success');
+                }
+
+                document.getElementById('form-attendance-setup').classList.add('hidden');
+                document.getElementById('attendance-list-container').classList.remove('hidden');
+
+                document.getElementById('att-info-title').innerText = `${classId} • ${subject}`;
+                document.getElementById('att-info-sub').innerText = `${date} | Guru: ${teacher}`;
+
+                this.renderAttendanceStudents();
+            }
+
+            resetAttendanceForm() {
+                document.getElementById('form-attendance-setup').classList.remove('hidden');
+                document.getElementById('attendance-list-container').classList.add('hidden');
+            }
+
+            renderAttendanceStudents() {
+                const list = document.getElementById('attendance-student-list');
+                const classStudents = this.db.students.filter(s => s.classId === this.currentAttendance.classId);
+
+                list.innerHTML = '';
+                if (classStudents.length === 0) {
+                    list.innerHTML = `<div style="padding:20px; text-align:center;" class="text-muted">Tidak ada siswa terdaftar di ${this.currentAttendance.classId}</div>`;
+                    return;
+                }
+
+                classStudents.forEach(s => {
+                    const status = this.currentAttendance.records[s.id] || '';
+                    const item = document.createElement('div');
+                    item.className = 'student-item';
+                    item.innerHTML = `
+                        <div class="student-info">
+                            <div>
+                                <div class="student-name">${s.name}</div>
+                                <div class="student-nis">NIS: ${s.nis}</div>
+                            </div>
+                        </div>
+                        <div class="attendance-actions">
+                            <button class="btn-status ${status === 'H' ? 'active-H' : ''}" onclick="app.setStudentStatus('${s.id}', 'H')">H</button>
+                            <button class="btn-status ${status === 'S' ? 'active-S' : ''}" onclick="app.setStudentStatus('${s.id}', 'S')">S</button>
+                            <button class="btn-status ${status === 'I' ? 'active-I' : ''}" onclick="app.setStudentStatus('${s.id}', 'I')">I</button>
+                            <button class="btn-status ${status === 'A' ? 'active-A' : ''}" onclick="app.setStudentStatus('${s.id}', 'A')">A</button>
+                            <button class="btn-status ${status === 'T' ? 'active-T' : ''}" onclick="app.setStudentStatus('${s.id}', 'T')">T</button>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+
+                this.updateAttendanceStatusMsg(classStudents.length);
+            }
+
+            setStudentStatus(studentId, status) {
+                this.currentAttendance.records[studentId] = status;
+                this.renderAttendanceStudents();
+            }
+
+            markAllAttendance(status) {
+                const classStudents = this.db.students.filter(s => s.classId === this.currentAttendance.classId);
+                classStudents.forEach(s => {
+                    this.currentAttendance.records[s.id] = status;
+                });
+                this.renderAttendanceStudents();
+            }
+
+            clearAllAttendance() {
+                this.currentAttendance.records = {};
+                this.renderAttendanceStudents();
+            }
+
+            updateAttendanceStatusMsg(totalStudents) {
+                const recordedCount = Object.keys(this.currentAttendance.records).length;
+                const msgEl = document.getElementById('att-status-msg');
+
+                if (recordedCount < totalStudents) {
+                    msgEl.innerText = `⚠️ ${recordedCount} dari ${totalStudents} siswa telah diisi status kehadirannya.`;
+                } else {
+                    msgEl.innerText = `✅ Semua ${totalStudents} siswa telah lengkap diisi status kehadirannya!`;
+                }
+            }
+
+            saveAttendanceSession() {
+                const { date, classId, teacher, subject, records } = this.currentAttendance;
+                const totalStudents = this.db.students.filter(s => s.classId === classId).length;
+
+                if (Object.keys(records).length === 0) {
+                    this.showToast('Belum ada status kehadiran yang diisi!', 'error');
+                    return;
+                }
+
+                const existingIdx = this.db.sessions.findIndex(s => s.date === date && s.classId === classId && s.subject === subject);
+                const sessionObj = {
+                    id: existingIdx !== -1 ? this.db.sessions[existingIdx].id : 'SESS-' + Date.now(),
+                    date, classId, teacher, subject, records,
+                    updatedAt: new Date().toISOString()
+                };
+
+                if (existingIdx !== -1) {
+                    this.db.sessions[existingIdx] = sessionObj;
+                } else {
+                    this.db.sessions.push(sessionObj);
+                }
+
+                this.saveToStorage();
+                this.showToast('Sesi absensi berhasil disimpan!', 'success');
+                this.renderDashboardStats();
+                this.resetAttendanceForm();
+                this.switchView('view-dashboard');
+            }
+
+            toggleHistoryTab(tab) {
+                document.getElementById('tab-content-hist').classList.add('hidden');
+                document.getElementById('tab-content-recap').classList.add('hidden');
+                document.getElementById('tab-content-stats').classList.add('hidden');
+
+                document.getElementById('tab-hist').className = 'btn btn-outline';
+                document.getElementById('tab-recap').className = 'btn btn-outline';
+                document.getElementById('tab-stats').className = 'btn btn-outline';
+
+                if (tab === 'hist') {
+                    document.getElementById('tab-content-hist').classList.remove('hidden');
+                    document.getElementById('tab-hist').className = 'btn';
+                    this.renderHistory();
+                } else if (tab === 'recap') {
+                    document.getElementById('tab-content-recap').classList.remove('hidden');
+                    document.getElementById('tab-recap').className = 'btn';
+                    this.renderRecap();
+                } else if (tab === 'stats') {
+                    document.getElementById('tab-content-stats').classList.remove('hidden');
+                    document.getElementById('tab-stats').className = 'btn';
+                    this.renderStats();
+                }
+            }
+
+            renderHistory() {
+                const list = document.getElementById('history-list');
+                const selectedClass = document.getElementById('hist-filter-class').value;
+                const user = this.db.auth?.currentUser;
+
+                list.innerHTML = '';
+                const filtered = this.db.sessions.filter(s => {
+                    if (user && user.role === 'class') {
+                        return s.classId === user.classId;
+                    }
+                    return selectedClass === 'ALL' || s.classId === selectedClass;
+                }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                if (filtered.length === 0) {
+                    list.innerHTML = `<p class="text-muted" style="text-align:center; padding:20px;">Belum ada riwayat absensi.</p>`;
+                    return;
+                }
+
+                filtered.forEach(s => {
+                    let totalH = 0, totalS = 0, totalI = 0, totalA = 0, totalT = 0;
+                    Object.values(s.records).forEach(st => {
+                        if (st === 'H') totalH++;
+                        if (st === 'S') totalS++;
+                        if (st === 'I') totalI++;
+                        if (st === 'A') totalA++;
+                        if (st === 'T') totalT++;
+                    });
+
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div style="display:flex; justify-style:space-between; align-items:center; margin-bottom:8px;">
+                            <div>
+                                <h4 style="font-size:1rem; color:var(--text-main);">${s.classId} • ${s.subject}</h4>
+                                <span style="font-size:0.78rem; color:var(--text-muted);">${s.date} | Guru: ${s.teacher}</span>
+                            </div>
+                            <button class="btn btn-danger" style="width:auto; min-height:32px; padding:4px 10px; font-size:0.78rem;" onclick="app.deleteHistorySession('${s.id}')">🗑️ Hapus</button>
+                        </div>
+                        <div style="display:flex; gap:10px; font-size:0.82rem; font-weight:700;">
+                            <span style="color:var(--c-hadir)">H: ${totalH}</span>
+                            <span style="color:var(--c-sakit)">S: ${totalS}</span>
+                            <span style="color:var(--c-izin)">I: ${totalI}</span>
+                            <span style="color:var(--c-alpa)">A: ${totalA}</span>
+                            <span style="color:var(--c-telat)">T: ${totalT}</span>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            }
+
+            deleteHistorySession(id) {
+                if (confirm('Hapus sesi absensi ini?')) {
+                    this.db.sessions = this.db.sessions.filter(s => s.id !== id);
+                    this.saveToStorage();
+                    this.renderHistory();
+                    this.renderDashboardStats();
+                    this.showToast('Sesi absensi telah dihapus', 'success');
+                }
+            }
+
+            renderRecap() {
+                const monthStr = document.getElementById('recap-month').value;
+                const classId = document.getElementById('recap-class').value;
+                const tbody = document.getElementById('recap-tbody');
+
+                tbody.innerHTML = '';
+                if (!monthStr || !classId) return;
+
+                const students = this.db.students.filter(s => s.classId === classId);
+                const monthSessions = this.db.sessions.filter(s => s.classId === classId && s.date.startsWith(monthStr));
+
+                if (students.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Tidak ada data siswa di ${classId}</td></tr>`;
+                    return;
+                }
+
+                students.forEach((st, idx) => {
+                    let h = 0, s = 0, i = 0, a = 0, t = 0;
+                    monthSessions.forEach(sess => {
+                        const status = sess.records[st.id];
+                        if (status === 'H') h++;
+                        else if (status === 'S') s++;
+                        else if (status === 'I') i++;
+                        else if (status === 'A') a++;
+                        else if (status === 'T') t++;
+                    });
+
+                    const totalSess = monthSessions.length;
+                    const pct = totalSess > 0 ? Math.round(((h + t) / totalSess) * 100) : 0;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${idx + 1}</td>
+                        <td><strong>${st.name}</strong></td>
+                        <td>${h}</td>
+                        <td>${s}</td>
+                        <td>${i}</td>
+                        <td>${a}</td>
+                        <td>${t}</td>
+                        <td><strong>${pct}%</strong></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            renderStats() {
+                const classId = document.getElementById('stat-class').value;
+                const area = document.getElementById('chart-area');
+                area.innerHTML = '';
+
+                const sessions = this.db.sessions
+                    .filter(s => s.classId === classId)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                    .slice(-7);
+
+                if (sessions.length === 0) {
+                    area.innerHTML = `<p class="text-muted" style="margin:auto;">Belum ada data grafik untuk kelas ini.</p>`;
+                    return;
+                }
+
+                sessions.forEach(sess => {
+                    let total = 0, hadir = 0;
+                    Object.values(sess.records).forEach(st => {
+                        total++;
+                        if (st === 'H' || st === 'T') hadir++;
+                    });
+
+                    const pct = total > 0 ? Math.round((hadir / total) * 100) : 0;
+
+                    const barWrap = document.createElement('div');
+                    barWrap.className = 'chart-bar-wrap';
+                    barWrap.innerHTML = `
+                        <div style="font-size:0.7rem; font-weight:700; margin-bottom:4px; color:var(--primary);">${pct}%</div>
+                        <div class="chart-bar" style="height: ${Math.max(pct, 8)}%;"></div>
+                        <div class="chart-label">${sess.date.slice(5)}</div>
+                    `;
+                    area.appendChild(barWrap);
+                });
+            }
+
+            generateReport() {
+                const type = document.getElementById('rep-type').value;
+                const monthStr = document.getElementById('rep-month').value;
+                const classId = document.getElementById('rep-class').value;
+                const specDate = document.getElementById('rep-date').value;
+                const container = document.getElementById('print-container');
+
+                const school = this.db.settings.schoolName;
+                const teacher = this.db.settings.teacherName;
+                const teacherNip = this.db.settings.teacherNip;
+                const headmaster = this.db.settings.headmasterName;
+                const headmasterNip = this.db.settings.headmasterNip;
+
+                let html = `
+                    <div class="kop-surat">
+                        <img src="https://i.freeimage.host/nE7YK4S.png" alt="Logo" onerror="this.style.display='none';">
+                        <div class="kop-text">
+                            <h2>${school.toUpperCase()}</h2>
+                            <h3>REKAPITULASI KEHADIRAN SISWA - ${classId.toUpperCase()}</h3>
+                            <p>Kecamatan Mootilango • Kabupaten Gorontalo • Provinsi Gorontalo</p>
+                        </div>
+                    </div>
+                `;
+
+                const students = this.db.students.filter(s => s.classId === classId);
+
+                if (type === 'daily_detail') {
+                    document.getElementById('rep-date-picker-group').style.display = 'block';
+                    const session = this.db.sessions.find(s => s.classId === classId && s.date === specDate);
+
+                    html += `
+                        <div style="margin-bottom:12px; font-size:0.88rem; display:flex; justify-style:space-between;">
+                            <span><strong>Tanggal:</strong> ${specDate}</span>
+                            <span><strong>Mata Pelajaran:</strong> ${session ? session.subject : 'Umum'}</span>
+                            <span><strong>Guru:</strong> ${session ? session.teacher : teacher}</span>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>NIS</th>
+                                    <th class="text-left">Nama Siswa</th>
+                                    <th>L/P</th>
+                                    <th>Status Kehadiran</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    if (students.length === 0) {
+                        html += `<tr><td colspan="5">Tidak ada data siswa.</td></tr>`;
+                    } else {
+                        students.forEach((st, idx) => {
+                            const status = session ? (session.records[st.id] || '-') : '-';
+                            let statusText = status;
+                            if (status === 'H') statusText = '🟢 HADIR';
+                            else if (status === 'S') statusText = '🔵 SAKIT';
+                            else if (status === 'I') statusText = '🟡 IZIN';
+                            else if (status === 'A') statusText = '🔴 ALPA';
+                            else if (status === 'T') statusText = '🟣 TERLAMBAT';
+
+                            html += `
+                                <tr>
+                                    <td>${idx + 1}</td>
+                                    <td>${st.nis}</td>
+                                    <td class="text-left">${st.name}</td>
+                                    <td>${st.gender || 'L'}</td>
+                                    <td><strong>${statusText}</strong></td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    html += `</tbody></table>`;
+                } else {
+                    document.getElementById('rep-date-picker-group').style.display = 'none';
+                    const year = monthStr ? monthStr.split('-')[0] : new Date().getFullYear();
+                    const month = monthStr ? parseInt(monthStr.split('-')[1]) : new Date().getMonth() + 1;
+                    const daysInMonth = new Date(year, month, 0).getDate();
+
+                    const monthSessions = this.db.sessions.filter(s => s.classId === classId && s.date.startsWith(monthStr));
+
+                    html += `
+                        <div style="margin-bottom:10px; font-size:0.85rem;">
+                            <strong>Bulan/Tahun:</strong> ${monthStr}
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">No</th>
+                                    <th rowspan="2" class="text-left">Nama Siswa</th>
+                                    <th rowspan="2">L/P</th>
+                                    <th colspan="${daysInMonth}">Tanggal</th>
+                                    <th colspan="5">Total</th>
+                                </tr>
+                                <tr>
+                    `;
+
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        html += `<th style="padding:2px 3px; font-size:7pt;">${d}</th>`;
+                    }
+                    html += `<th>H</th><th>S</th><th>I</th><th>A</th><th>T</th></tr></thead><tbody>`;
+
+                    if (students.length === 0) {
+                        html += `<tr><td colspan="${daysInMonth + 8}">Tidak ada siswa.</td></tr>`;
+                    } else {
+                        students.forEach((st, idx) => {
+                            let h = 0, s = 0, i = 0, a = 0, t = 0;
+                            html += `
+                                <tr>
+                                    <td>${idx + 1}</td>
+                                    <td class="text-left">${st.name}</td>
+                                    <td>${st.gender || 'L'}</td>
+                            `;
+
+                            for (let d = 1; d <= daysInMonth; d++) {
+                                const dayFormatted = String(d).padStart(2, '0');
+                                const targetDate = `${monthStr}-${dayFormatted}`;
+                                const daySess = monthSessions.find(ms => ms.date === targetDate);
+                                const stCode = daySess ? (daySess.records[st.id] || '') : '';
+
+                                if (stCode === 'H') h++;
+                                else if (stCode === 'S') s++;
+                                else if (stCode === 'I') i++;
+                                else if (stCode === 'A') a++;
+                                else if (stCode === 'T') t++;
+
+                                html += `<td style="padding:2px 3px; font-size:7pt;">${stCode}</td>`;
+                            }
+
+                            html += `
+                                <td>${h}</td>
+                                <td>${s}</td>
+                                <td>${i}</td>
+                                <td>${a}</td>
+                                <td>${t}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    html += `</tbody></table>`;
+                }
+
+                html += `
+                    <div class="ttd-section">
+                        <div class="ttd-box">
+                            <p>Mengetahui,</p>
+                            <p><strong>Kepala Madrasah</strong></p>
+                            <div class="ttd-space"></div>
+                            <p><strong><u>${headmaster}</u></strong></p>
+                            <p>NIP. ${headmasterNip || '-'}</p>
+                        </div>
+                        <div class="ttd-box">
+                            <p>Mootilango, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                            <p><strong>Wali Kelas / Guru</strong></p>
+                            <div class="ttd-space"></div>
+                            <p><strong><u>${teacher}</u></strong></p>
+                            <p>NIP. ${teacherNip || '-'}</p>
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            }
+
+            exportReportToExcel() {
+                const table = document.querySelector('#print-container table');
+                if (!table) {
+                    this.showToast('Gagal mengeksport, tabel tidak ditemukan.', 'error');
+                    return;
+                }
+                const wb = XLSX.utils.table_to_book(table, { sheet: "Laporan_Absensi" });
+                XLSX.writeFile(wb, `Laporan_Absensi_${document.getElementById('rep-class').value}.xlsx`);
+            }
+
+            exportData(format) {
+                let csv = "ID,Tanggal,Kelas,Mata Pelajaran,Guru,Status_Kehadiran\n";
+                this.db.sessions.forEach(sess => {
+                    Object.entries(sess.records).forEach(([stuId, st]) => {
+                        const student = this.db.students.find(s => s.id === stuId);
+                        const stuName = student ? student.name : stuId;
+                        csv += `"${sess.id}","${sess.date}","${sess.classId}","${sess.subject}","${sess.teacher}","${stuName}:${st}"\n`;
+                    });
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Data_Absensi_MIS_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+            }
+
+            backupData() {
+                const jsonStr = JSON.stringify(this.db, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Backup_MIS_Absensi_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+            }
+
+            handleRestoreJSON() {
+                const fileInput = document.getElementById('restore-file-input');
+                const file = fileInput.files[0];
+                if (!file) {
+                    this.showToast('Pilih file JSON backup terlebih dahulu!', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        if (parsed.settings && parsed.students) {
+                            this.db = parsed;
+                            this.saveToStorage();
+                            this.init();
+                            this.closeModal('modal-restore');
+                            this.showToast('Database berhasil dipulihkan dari cadangan!', 'success');
+                        } else {
+                            this.showToast('Format JSON file backup tidak valid.', 'error');
+                        }
+                    } catch (err) {
+                        this.showToast('Gagal membaca file JSON.', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            saveSettings() {
+                this.db.settings.schoolName = document.getElementById('set-school').value.trim();
+                this.db.settings.teacherName = document.getElementById('set-teacher').value.trim();
+                this.db.settings.teacherNip = document.getElementById('set-nip').value.trim();
+                this.db.settings.headmasterName = document.getElementById('set-headmaster').value.trim();
+                this.db.settings.headmasterNip = document.getElementById('set-headmaster-nip').value.trim();
+
+                this.saveToStorage();
+                this.populateTeacherDropdown();
+                this.renderDashboardStats();
+                this.showToast('Pengaturan profil sekolah disimpan!', 'success');
+            }
+
+            addClass() {
+                const name = document.getElementById('new-class-name').value.trim();
+                if (!name) return;
+
+                if (!this.db.settings.classes.includes(name)) {
+                    this.db.settings.classes.push(name);
+                    this.db.auth.classCreds[name] = {
+                        username: name.toLowerCase().replace(/\s+/g, ''),
+                        password: '123'
+                    };
+                    this.saveToStorage();
+                    this.populateClassDropdowns();
+                    this.initCoverClassButtons();
+                    this.renderAccountCredentialsSettings();
+                    document.getElementById('new-class-name').value = '';
+                    this.showToast(`Kelas "${name}" berhasil ditambahkan!`, 'success');
+                }
+            }
+
+            loadDemoData(showToastMsg = true) {
+                this.db.students = [
+                    { id: "STU-1", nis: "1001", name: "Ahmad Fauzi", gender: "L", classId: "Kelas 5" },
+                    { id: "STU-2", nis: "1002", name: "Siti Nurhaliza", gender: "P", classId: "Kelas 5" },
+                    { id: "STU-3", nis: "1003", name: "Muhammad Rizky", gender: "L", classId: "Kelas 5" },
+                    { id: "STU-4", nis: "1004", name: "Aisyah Putri", gender: "P", classId: "Kelas 5" },
+                    { id: "STU-5", nis: "1005", name: "Bilal Ramadhan", gender: "L", classId: "Kelas 1" }
+                ];
+
+                this.db.teachers = [
+                    { id: "TCH-1", name: "Abdullah S. Kaharu, S.Pd", nip: "198506122010011005", role: "Wali Kelas 5" },
+                    { id: "TCH-2", name: "Fatimah Azzahra, S.Pd.I", nip: "199004152015022002", role: "Guru Fikih" }
+                ];
+
+                this.saveToStorage();
+                this.populateTeacherDropdown();
+                this.renderDashboardStats();
+                this.renderStudents();
+                if (showToastMsg) this.showToast('Data demo berhasil dimuat!', 'success');
+            }
+
+            resetAllData() {
+                if (confirm('Apakah Anda YAKIN ingin menghapus seluruh data di aplikasi? Data tidak dapat dikembalikan!')) {
+                    localStorage.removeItem('mis_absensi_data_v3');
+                    location.reload();
+                }
+            }
+
+            applyTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                this.db.settings.theme = theme;
+                this.saveToStorage();
+            }
+
+            changeTheme(theme) {
+                this.applyTheme(theme);
+                this.showToast(`Tema diubah ke ${theme === 'dark' ? 'Mode Gelap' : 'Mode Terang'}`, 'success');
+            }
+
+            openModal(modalId) {
+                const el = document.getElementById(modalId);
+                if (el) {
+                    el.classList.add('active');
+                    if (modalId === 'modal-student') {
+                        const user = this.db.auth?.currentUser;
+                        const selectCls = document.getElementById('student-class');
+                        if (user && user.role === 'class' && selectCls) {
+                            selectCls.value = user.classId;
+                            selectCls.disabled = true;
+                        } else if (selectCls) {
+                            selectCls.disabled = false;
+                        }
+                    }
+                }
+            }
+
+            closeModal(modalId) {
+                const el = document.getElementById(modalId);
+                if (el) el.classList.remove('active');
+            }
+
+            switchView(viewId) {
+                const user = this.db.auth?.currentUser;
+                if (user && user.role === 'class') {
+                    if (viewId === 'view-teachers' || viewId === 'view-settings') {
+                        this.showToast('Akses dibatasi. Guru kelas hanya dapat mengelola data siswa dan absensi.', 'error');
+                        return;
+                    }
+                }
+
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                const target = document.getElementById(viewId);
+                if (target) target.classList.add('active');
+
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                const navItem = document.querySelector(`.nav-item[data-target="${viewId}"]`);
+                if (navItem) navItem.classList.add('active');
+
+                if (viewId === 'view-dashboard') this.renderDashboardStats();
+                if (viewId === 'view-teachers') this.renderTeachers();
+                if (viewId === 'view-students') this.renderStudents();
+                if (viewId === 'view-history') this.renderHistory();
+                if (viewId === 'view-reports') this.generateReport();
+                if (viewId === 'view-settings') this.renderAccountCredentialsSettings();
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            showToast(message, type = 'success') {
+                const container = document.getElementById('toast-container');
+                if (!container) return;
+
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <span>${type === 'success' ? '✅' : '⚠️'}</span>
+                    <span>${message}</span>
+                `;
+
+                container.appendChild(toast);
+                setTimeout(() => toast.remove(), 3500);
+            }
+        }
+
+        const app = new AttendanceApp();
+    </script>
+</body>
+</html>
