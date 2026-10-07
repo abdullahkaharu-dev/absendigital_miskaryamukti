@@ -104,31 +104,43 @@
             text-align: center;
         }
 
-        /* Sticky High-Visibility Marquee Bar */
+        /* STICKY HIGH-VISIBILITY MARQUEE BAR ENHANCEMENTS */
         .marquee-container {
             width: 100%;
+            flex-shrink: 0;
             position: sticky;
             top: 0;
-            z-index: 100;
-            background: rgba(2, 44, 34, 0.95);
+            z-index: 1000;
+            background: linear-gradient(90deg, #022c22 0%, #065f46 50%, #022c22 100%);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 2px solid #f59e0b;
-            padding: 11px 0;
+            padding: 10px 0;
             overflow: hidden;
             white-space: nowrap;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+        }
+
+        .marquee-track {
+            display: inline-flex;
+            white-space: nowrap;
+            will-change: transform;
+            animation: marquee 26s linear infinite;
+        }
+
+        .marquee-container:hover .marquee-track {
+            animation-play-state: paused;
         }
 
         .marquee-text {
-            display: inline-block;
-            white-space: nowrap;
-            animation: marquee 24s linear infinite;
             font-size: 0.95rem;
             font-weight: 700;
             color: #fef08a;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
+            padding-right: 50px;
         }
 
         @keyframes marquee {
@@ -341,7 +353,7 @@
             height: var(--nav-h);
             background: var(--card-bg);
             display: flex;
-            justify-content: space-around;
+            justify-style: space-around;
             align-items: center;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
             z-index: 1000;
@@ -580,10 +592,12 @@
 <body class="cover-active">
 
     <div id="cover-screen">
-        <!-- STICKY TOP MARQUEE BANNER WITH HIGH CONTRAST & VISIBILITY -->
+        <!-- STICKY TOP HIGH-CONTRAST MARQUEE BANNER -->
         <div class="marquee-container">
-            <div class="marquee-text">
-                📢 Selamat Datang di Aplikasi Absensi Digital MIS Al-Awwaliyah Karyamukti &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp; 🕌 Mewujudkan Generasi Cerdas, Unggul, & Berakhlakul Karimah &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp; 📖 "Bismillahirrahmānirrahīm"
+            <div class="marquee-track">
+                <span class="marquee-text">
+                    📢 Selamat Datang di Aplikasi Absensi Digital MIS Al-Awwaliyah Karyamukti &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp; 🕌 Mewujudkan Generasi Cerdas, Unggul, & Berakhlakul Karimah &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp; 📖 "Bismillahirrahmānirrahīm"
+                </span>
             </div>
         </div>
 
@@ -886,7 +900,7 @@
             </div>
 
             <div id="attendance-list-container" class="hidden">
-                <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="card" style="display:flex; justify-style:space-between; align-items:center;">
                     <div>
                         <h4 id="att-info-title">Kelas 5</h4>
                         <p style="font-size:0.8rem" id="att-info-sub">07 Okt 2026 | Mapel SKI</p>
@@ -1368,7 +1382,7 @@
                         theme: "light"
                     },
                     auth: {
-                        currentUser: null, // { role: 'admin' | 'class', classId: 'Kelas 5', username: '...' }
+                        currentUser: null,
                         adminCreds: { username: "admin", password: "admin123" },
                         classCreds: {
                             "Kelas 1": { username: "kelas1", password: "123" },
@@ -1404,7 +1418,6 @@
                 this.initCoverClassButtons();
                 this.updateAuthBadge();
 
-                // Set initial date in attendance setup
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('att-date').value = today;
                 document.getElementById('rep-date').value = today;
@@ -2104,11 +2117,32 @@
                     list.appendChild(item);
                 });
 
-                this.updateAttendanceStatusMsg(classStudents.length);
+                this.updateAttendanceStatusMsg();
+            }
+
+            updateAttendanceStatusMsg() {
+                const classStudents = this.db.students.filter(s => s.classId === this.currentAttendance.classId);
+                const total = classStudents.length;
+                const marked = Object.keys(this.currentAttendance.records).length;
+                const msgEl = document.getElementById('att-status-msg');
+                
+                if (!msgEl) return;
+                
+                if (marked === 0) {
+                    msgEl.innerText = `⚠️ Masih ada ${total} siswa yang belum diisi status kehadirannya.`;
+                } else if (marked < total) {
+                    msgEl.innerText = `⚠️ ${marked} dari ${total} siswa telah diisi statusnya. Masih ada ${total - marked} siswa belum terisi.`;
+                } else {
+                    msgEl.innerText = `✅ Seluruh status kehadiran ${total} siswa telah terisi lengkap!`;
+                }
             }
 
             setStudentStatus(studentId, status) {
-                this.currentAttendance.records[studentId] = status;
+                if (this.currentAttendance.records[studentId] === status) {
+                    delete this.currentAttendance.records[studentId];
+                } else {
+                    this.currentAttendance.records[studentId] = status;
+                }
                 this.renderAttendanceStudents();
             }
 
@@ -2118,42 +2152,27 @@
                     this.currentAttendance.records[s.id] = status;
                 });
                 this.renderAttendanceStudents();
+                this.showToast(`Seluruh siswa diset status ${status}`, 'success');
             }
 
             clearAllAttendance() {
                 this.currentAttendance.records = {};
                 this.renderAttendanceStudents();
-            }
-
-            updateAttendanceStatusMsg(totalStudents) {
-                const recordedCount = Object.keys(this.currentAttendance.records).length;
-                const msgEl = document.getElementById('att-status-msg');
-
-                if (recordedCount < totalStudents) {
-                    msgEl.innerText = `⚠️ ${recordedCount} dari ${totalStudents} siswa telah diisi status kehadirannya.`;
-                } else {
-                    msgEl.innerText = `✅ Semua ${totalStudents} siswa telah lengkap diisi status kehadirannya!`;
-                }
+                this.showToast('Status kehadiran direset', 'success');
             }
 
             saveAttendanceSession() {
                 const { date, classId, teacher, subject, records } = this.currentAttendance;
-                const totalStudents = this.db.students.filter(s => s.classId === classId).length;
+                if (!date || !classId) return;
 
-                if (Object.keys(records).length === 0) {
-                    this.showToast('Belum ada status kehadiran yang diisi!', 'error');
-                    return;
-                }
-
-                const existingIdx = this.db.sessions.findIndex(s => s.date === date && s.classId === classId && s.subject === subject);
+                const existingIndex = this.db.sessions.findIndex(s => s.date === date && s.classId === classId && s.subject === subject);
                 const sessionObj = {
-                    id: existingIdx !== -1 ? this.db.sessions[existingIdx].id : 'SESS-' + Date.now(),
-                    date, classId, teacher, subject, records,
-                    updatedAt: new Date().toISOString()
+                    id: existingIndex !== -1 ? this.db.sessions[existingIndex].id : 'SESS-' + Date.now(),
+                    date, classId, teacher, subject, records
                 };
 
-                if (existingIdx !== -1) {
-                    this.db.sessions[existingIdx] = sessionObj;
+                if (existingIndex !== -1) {
+                    this.db.sessions[existingIndex] = sessionObj;
                 } else {
                     this.db.sessions.push(sessionObj);
                 }
@@ -2162,77 +2181,56 @@
                 this.showToast('Sesi absensi berhasil disimpan!', 'success');
                 this.renderDashboardStats();
                 this.resetAttendanceForm();
-                this.switchView('view-dashboard');
+                this.switchView('view-history');
             }
 
             toggleHistoryTab(tab) {
-                document.getElementById('tab-content-hist').classList.add('hidden');
-                document.getElementById('tab-content-recap').classList.add('hidden');
-                document.getElementById('tab-content-stats').classList.add('hidden');
+                ['hist', 'recap', 'stats'].forEach(t => {
+                    document.getElementById(`tab-${t}`).className = t === tab ? 'btn' : 'btn btn-outline';
+                    document.getElementById(`tab-content-${t}`).className = t === tab ? '' : 'hidden';
+                });
 
-                document.getElementById('tab-hist').className = 'btn btn-outline';
-                document.getElementById('tab-recap').className = 'btn btn-outline';
-                document.getElementById('tab-stats').className = 'btn btn-outline';
-
-                if (tab === 'hist') {
-                    document.getElementById('tab-content-hist').classList.remove('hidden');
-                    document.getElementById('tab-hist').className = 'btn';
-                    this.renderHistory();
-                } else if (tab === 'recap') {
-                    document.getElementById('tab-content-recap').classList.remove('hidden');
-                    document.getElementById('tab-recap').className = 'btn';
-                    this.renderRecap();
-                } else if (tab === 'stats') {
-                    document.getElementById('tab-content-stats').classList.remove('hidden');
-                    document.getElementById('tab-stats').className = 'btn';
-                    this.renderStats();
-                }
+                if (tab === 'hist') this.renderHistory();
+                if (tab === 'recap') this.renderRecap();
+                if (tab === 'stats') this.renderStats();
             }
 
             renderHistory() {
                 const list = document.getElementById('history-list');
-                const selectedClass = document.getElementById('hist-filter-class').value;
+                const filterClass = document.getElementById('hist-filter-class').value;
                 const user = this.db.auth?.currentUser;
 
                 list.innerHTML = '';
                 const filtered = this.db.sessions.filter(s => {
-                    if (user && user.role === 'class') {
-                        return s.classId === user.classId;
-                    }
-                    return selectedClass === 'ALL' || s.classId === selectedClass;
-                }).sort((a, b) => new Date(b.date) - new Date(a.date));
+                    if (user && user.role === 'class') return s.classId === user.classId;
+                    return filterClass === 'ALL' || s.classId === filterClass;
+                });
 
                 if (filtered.length === 0) {
-                    list.innerHTML = `<p class="text-muted" style="text-align:center; padding:20px;">Belum ada riwayat absensi.</p>`;
+                    list.innerHTML = `<div class="card text-muted" style="text-align:center;">Belum ada riwayat sesi absensi.</div>`;
                     return;
                 }
 
-                filtered.forEach(s => {
-                    let totalH = 0, totalS = 0, totalI = 0, totalA = 0, totalT = 0;
-                    Object.values(s.records).forEach(st => {
-                        if (st === 'H') totalH++;
-                        if (st === 'S') totalS++;
-                        if (st === 'I') totalI++;
-                        if (st === 'A') totalA++;
-                        if (st === 'T') totalT++;
-                    });
+                filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(s => {
+                    const counts = { H: 0, S: 0, I: 0, A: 0, T: 0 };
+                    Object.values(s.records).forEach(st => { if(counts[st] !== undefined) counts[st]++; });
 
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
-                        <div style="display:flex; justify-style:space-between; align-items:center; margin-bottom:8px;">
+                        <div style="display:flex; justify-style:space-between; align-items:flex-start; margin-bottom:10px;">
                             <div>
-                                <h4 style="font-size:1rem; color:var(--text-main);">${s.classId} • ${s.subject}</h4>
-                                <span style="font-size:0.78rem; color:var(--text-muted);">${s.date} | Guru: ${s.teacher}</span>
+                                <h3 style="font-size:1.1rem; color:var(--primary-dark);">${s.classId} • ${s.subject}</h3>
+                                <p style="font-size:0.82rem; color:var(--text-muted);">${s.date} | Guru: ${s.teacher}</p>
                             </div>
-                            <button class="btn btn-danger" style="width:auto; min-height:32px; padding:4px 10px; font-size:0.78rem;" onclick="app.deleteHistorySession('${s.id}')">🗑️ Hapus</button>
+                            <button class="btn btn-danger" style="width:auto; min-height:32px; padding:4px 8px; font-size:0.8rem;" onclick="app.deleteHistorySession('${s.id}')">🗑️</button>
                         </div>
-                        <div style="display:flex; gap:10px; font-size:0.82rem; font-weight:700;">
-                            <span style="color:var(--c-hadir)">H: ${totalH}</span>
-                            <span style="color:var(--c-sakit)">S: ${totalS}</span>
-                            <span style="color:var(--c-izin)">I: ${totalI}</span>
-                            <span style="color:var(--c-alpa)">A: ${totalA}</span>
-                            <span style="color:var(--c-telat)">T: ${totalT}</span>
+                        <div style="display:flex; gap:10px; font-weight:700; font-size:0.85rem;">
+                            <span style="color:var(--c-hadir)">H: ${counts.H}</span>
+                            <span style="color:var(--c-sakit)">S: ${counts.S}</span>
+                            <span style="color:var(--c-izin)">I: ${counts.I}</span>
+                            <span style="color:var(--c-alpa)">A: ${counts.A}</span>
+                            <span style="color:var(--c-telat)">T: ${counts.T}</span>
                         </div>
                     `;
                     list.appendChild(card);
@@ -2245,7 +2243,7 @@
                     this.saveToStorage();
                     this.renderHistory();
                     this.renderDashboardStats();
-                    this.showToast('Sesi absensi telah dihapus', 'success');
+                    this.showToast('Sesi absensi terhapus', 'success');
                 }
             }
 
@@ -2255,40 +2253,34 @@
                 const tbody = document.getElementById('recap-tbody');
 
                 tbody.innerHTML = '';
-                if (!monthStr || !classId) return;
-
                 const students = this.db.students.filter(s => s.classId === classId);
                 const monthSessions = this.db.sessions.filter(s => s.classId === classId && s.date.startsWith(monthStr));
 
                 if (students.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Tidak ada data siswa di ${classId}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Tidak ada siswa di ${classId}</td></tr>`;
                     return;
                 }
 
-                students.forEach((st, idx) => {
-                    let h = 0, s = 0, i = 0, a = 0, t = 0;
+                students.forEach((s, idx) => {
+                    let counts = { H: 0, S: 0, I: 0, A: 0, T: 0 };
                     monthSessions.forEach(sess => {
-                        const status = sess.records[st.id];
-                        if (status === 'H') h++;
-                        else if (status === 'S') s++;
-                        else if (status === 'I') i++;
-                        else if (status === 'A') a++;
-                        else if (status === 'T') t++;
+                        const st = sess.records[s.id];
+                        if (st && counts[st] !== undefined) counts[st]++;
                     });
 
                     const totalSess = monthSessions.length;
-                    const pct = totalSess > 0 ? Math.round(((h + t) / totalSess) * 100) : 0;
+                    const pct = totalSess > 0 ? Math.round(((counts.H + counts.T) / totalSess) * 100) : 0;
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${idx + 1}</td>
-                        <td><strong>${st.name}</strong></td>
-                        <td>${h}</td>
-                        <td>${s}</td>
-                        <td>${i}</td>
-                        <td>${a}</td>
-                        <td>${t}</td>
-                        <td><strong>${pct}%</strong></td>
+                        <td style="font-weight:600;">${s.name}</td>
+                        <td style="color:var(--c-hadir); font-weight:700;">${counts.H}</td>
+                        <td style="color:var(--c-sakit); font-weight:700;">${counts.S}</td>
+                        <td style="color:var(--c-izin); font-weight:700;">${counts.I}</td>
+                        <td style="color:var(--c-alpa); font-weight:700;">${counts.A}</td>
+                        <td style="color:var(--c-telat); font-weight:700;">${counts.T}</td>
+                        <td style="font-weight:700;">${pct}%</td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -2296,198 +2288,107 @@
 
             renderStats() {
                 const classId = document.getElementById('stat-class').value;
-                const area = document.getElementById('chart-area');
-                area.innerHTML = '';
+                const chartArea = document.getElementById('chart-area');
+                chartArea.innerHTML = '';
 
-                const sessions = this.db.sessions
-                    .filter(s => s.classId === classId)
-                    .sort((a, b) => new Date(a.date) - new Date(b.date))
-                    .slice(-7);
-
+                const sessions = this.db.sessions.filter(s => s.classId === classId).slice(-7);
                 if (sessions.length === 0) {
-                    area.innerHTML = `<p class="text-muted" style="margin:auto;">Belum ada data grafik untuk kelas ini.</p>`;
+                    chartArea.innerHTML = `<div style="width:100%; text-align:center;" class="text-muted">Belum ada data sesi untuk kelas ini.</div>`;
                     return;
                 }
 
-                sessions.forEach(sess => {
-                    let total = 0, hadir = 0;
-                    Object.values(sess.records).forEach(st => {
-                        total++;
-                        if (st === 'H' || st === 'T') hadir++;
-                    });
-
+                sessions.forEach(s => {
+                    const total = Object.keys(s.records).length;
+                    let hadir = 0;
+                    Object.values(s.records).forEach(st => { if (st === 'H' || st === 'T') hadir++; });
                     const pct = total > 0 ? Math.round((hadir / total) * 100) : 0;
 
                     const barWrap = document.createElement('div');
                     barWrap.className = 'chart-bar-wrap';
                     barWrap.innerHTML = `
-                        <div style="font-size:0.7rem; font-weight:700; margin-bottom:4px; color:var(--primary);">${pct}%</div>
-                        <div class="chart-bar" style="height: ${Math.max(pct, 8)}%;"></div>
-                        <div class="chart-label">${sess.date.slice(5)}</div>
+                        <div style="font-size:0.7rem; font-weight:700; margin-bottom:4px;">${pct}%</div>
+                        <div class="chart-bar" style="height: ${Math.max(pct, 5)}%;"></div>
+                        <div class="chart-label">${s.date.slice(5)}</div>
                     `;
-                    area.appendChild(barWrap);
+                    chartArea.appendChild(barWrap);
                 });
             }
 
             generateReport() {
                 const type = document.getElementById('rep-type').value;
-                const monthStr = document.getElementById('rep-month').value;
+                const month = document.getElementById('rep-month').value;
                 const classId = document.getElementById('rep-class').value;
-                const specDate = document.getElementById('rep-date').value;
+                const date = document.getElementById('rep-date').value;
                 const container = document.getElementById('print-container');
 
-                const school = this.db.settings.schoolName;
-                const teacher = this.db.settings.teacherName;
-                const teacherNip = this.db.settings.teacherNip;
-                const headmaster = this.db.settings.headmasterName;
-                const headmasterNip = this.db.settings.headmasterNip;
+                const schoolName = this.db.settings.schoolName;
+                const hmName = this.db.settings.headmasterName || '......................................';
+                const hmNip = this.db.settings.headmasterNip || '-';
 
                 let html = `
                     <div class="kop-surat">
-                        <img src="https://i.freeimage.host/nE7YK4S.png" alt="Logo" onerror="this.style.display='none';">
                         <div class="kop-text">
-                            <h2>${school.toUpperCase()}</h2>
-                            <h3>REKAPITULASI KEHADIRAN SISWA - ${classId.toUpperCase()}</h3>
-                            <p>Kecamatan Mootilango • Kabupaten Gorontalo • Provinsi Gorontalo</p>
+                            <h2>LEMBAGA PENDIDIKAN MA'ARIF NU</h2>
+                            <h3>${schoolName.toUpperCase()}</h3>
+                            <p>Kecamatan Mootilango, Kabupaten Gorontalo • Email: misalawwaliyah@gmail.com</p>
                         </div>
                     </div>
                 `;
 
-                const students = this.db.students.filter(s => s.classId === classId);
+                if (type === 'monthly_matrix') {
+                    const daysInMonth = new Date(month.split('-')[0], month.split('-')[1], 0).getDate();
+                    const students = this.db.students.filter(s => s.classId === classId);
 
-                if (type === 'daily_detail') {
-                    document.getElementById('rep-date-picker-group').style.display = 'block';
-                    const session = this.db.sessions.find(s => s.classId === classId && s.date === specDate);
-
+                    html += `<h3 style="text-align:center; margin-bottom:14px; font-size:1.1rem;">LAPORAN BULANAN KEHADIRAN SISWA - ${classId.toUpperCase()} (${month})</h3>`;
                     html += `
-                        <div style="margin-bottom:12px; font-size:0.88rem; display:flex; justify-style:space-between;">
-                            <span><strong>Tanggal:</strong> ${specDate}</span>
-                            <span><strong>Mata Pelajaran:</strong> ${session ? session.subject : 'Umum'}</span>
-                            <span><strong>Guru:</strong> ${session ? session.teacher : teacher}</span>
-                        </div>
                         <table>
                             <thead>
                                 <tr>
-                                    <th>No</th>
-                                    <th>NIS</th>
-                                    <th class="text-left">Nama Siswa</th>
-                                    <th>L/P</th>
-                                    <th>Status Kehadiran</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                                    <th style="width:30px;">No</th>
+                                    <th>Nama Siswa</th>
                     `;
+                    for (let d = 1; d <= daysInMonth; d++) html += `<th style="width:22px; padding:2px;">${d}</th>`;
+                    html += `<th>H</th><th>S</th><th>I</th><th>A</th></tr></thead><tbody>`;
 
-                    if (students.length === 0) {
-                        html += `<tr><td colspan="5">Tidak ada data siswa.</td></tr>`;
-                    } else {
-                        students.forEach((st, idx) => {
-                            const status = session ? (session.records[st.id] || '-') : '-';
-                            let statusText = status;
-                            if (status === 'H') statusText = '🟢 HADIR';
-                            else if (status === 'S') statusText = '🔵 SAKIT';
-                            else if (status === 'I') statusText = '🟡 IZIN';
-                            else if (status === 'A') statusText = '🔴 ALPA';
-                            else if (status === 'T') statusText = '🟣 TERLAMBAT';
-
-                            html += `
-                                <tr>
-                                    <td>${idx + 1}</td>
-                                    <td>${st.nis}</td>
-                                    <td class="text-left">${st.name}</td>
-                                    <td>${st.gender || 'L'}</td>
-                                    <td><strong>${statusText}</strong></td>
-                                </tr>
-                            `;
-                        });
-                    }
+                    students.forEach((st, idx) => {
+                        let h=0, s=0, i=0, a=0;
+                        html += `<tr><td>${idx+1}</td><td class="text-left" style="font-weight:600;">${st.name}</td>`;
+                        for (let d = 1; d <= daysInMonth; d++) {
+                            const dateStr = `${month}-${String(d).padStart(2,'0')}`;
+                            const sess = this.db.sessions.find(s => s.classId === classId && s.date === dateStr);
+                            const code = sess ? (sess.records[st.id] || '-') : '-';
+                            if (code==='H'||code==='T') h++; else if (code==='S') s++; else if (code==='I') i++; else if (code==='A') a++;
+                            html += `<td style="padding:2px; font-size:8pt;">${code}</td>`;
+                        }
+                        html += `<td style="font-weight:700;">${h}</td><td>${s}</td><td>${i}</td><td>${a}</td></tr>`;
+                    });
 
                     html += `</tbody></table>`;
                 } else {
-                    document.getElementById('rep-date-picker-group').style.display = 'none';
-                    const year = monthStr ? monthStr.split('-')[0] : new Date().getFullYear();
-                    const month = monthStr ? parseInt(monthStr.split('-')[1]) : new Date().getMonth() + 1;
-                    const daysInMonth = new Date(year, month, 0).getDate();
+                    const sess = this.db.sessions.find(s => s.classId === classId && s.date === date);
+                    const students = this.db.students.filter(s => s.classId === classId);
 
-                    const monthSessions = this.db.sessions.filter(s => s.classId === classId && s.date.startsWith(monthStr));
+                    html += `<h3 style="text-align:center; margin-bottom:14px;">LAPORAN HARIAN KEHADIRAN SISWA - ${classId} (${date})</h3>`;
+                    html += `<table><thead><tr><th>No</th><th>NIS</th><th>Nama Siswa</th><th>Status Kehadiran</th></tr></thead><tbody>`;
 
-                    html += `
-                        <div style="margin-bottom:10px; font-size:0.85rem;">
-                            <strong>Bulan/Tahun:</strong> ${monthStr}
-                        </div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th rowspan="2">No</th>
-                                    <th rowspan="2" class="text-left">Nama Siswa</th>
-                                    <th rowspan="2">L/P</th>
-                                    <th colspan="${daysInMonth}">Tanggal</th>
-                                    <th colspan="5">Total</th>
-                                </tr>
-                                <tr>
-                    `;
-
-                    for (let d = 1; d <= daysInMonth; d++) {
-                        html += `<th style="padding:2px 3px; font-size:7pt;">${d}</th>`;
-                    }
-                    html += `<th>H</th><th>S</th><th>I</th><th>A</th><th>T</th></tr></thead><tbody>`;
-
-                    if (students.length === 0) {
-                        html += `<tr><td colspan="${daysInMonth + 8}">Tidak ada siswa.</td></tr>`;
-                    } else {
-                        students.forEach((st, idx) => {
-                            let h = 0, s = 0, i = 0, a = 0, t = 0;
-                            html += `
-                                <tr>
-                                    <td>${idx + 1}</td>
-                                    <td class="text-left">${st.name}</td>
-                                    <td>${st.gender || 'L'}</td>
-                            `;
-
-                            for (let d = 1; d <= daysInMonth; d++) {
-                                const dayFormatted = String(d).padStart(2, '0');
-                                const targetDate = `${monthStr}-${dayFormatted}`;
-                                const daySess = monthSessions.find(ms => ms.date === targetDate);
-                                const stCode = daySess ? (daySess.records[st.id] || '') : '';
-
-                                if (stCode === 'H') h++;
-                                else if (stCode === 'S') s++;
-                                else if (stCode === 'I') i++;
-                                else if (stCode === 'A') a++;
-                                else if (stCode === 'T') t++;
-
-                                html += `<td style="padding:2px 3px; font-size:7pt;">${stCode}</td>`;
-                            }
-
-                            html += `
-                                <td>${h}</td>
-                                <td>${s}</td>
-                                <td>${i}</td>
-                                <td>${a}</td>
-                                <td>${t}</td>
-                                </tr>
-                            `;
-                        });
-                    }
-
+                    students.forEach((st, idx) => {
+                        const code = sess ? (sess.records[st.id] || 'Belum Absen') : 'Belum Absen';
+                        html += `<tr><td>${idx+1}</td><td>${st.nis}</td><td class="text-left">${st.name}</td><td><strong>${code}</strong></td></tr>`;
+                    });
                     html += `</tbody></table>`;
                 }
 
                 html += `
                     <div class="ttd-section">
                         <div class="ttd-box">
-                            <p>Mengetahui,</p>
-                            <p><strong>Kepala Madrasah</strong></p>
+                            <p>Mengetahui,<br>Kepala Madrasah</p>
                             <div class="ttd-space"></div>
-                            <p><strong><u>${headmaster}</u></strong></p>
-                            <p>NIP. ${headmasterNip || '-'}</p>
+                            <p><strong>${hmName}</strong><br>NIP. ${hmNip}</p>
                         </div>
                         <div class="ttd-box">
-                            <p>Mootilango, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                            <p><strong>Wali Kelas / Guru</strong></p>
+                            <p>Mootilango, ${new Date().toLocaleDateString('id-ID')}<br>Wali Kelas / Guru</p>
                             <div class="ttd-space"></div>
-                            <p><strong><u>${teacher}</u></strong></p>
-                            <p>NIP. ${teacherNip || '-'}</p>
+                            <p><strong>${this.db.settings.teacherName}</strong><br>NIP. ${this.db.settings.teacherNip}</p>
                         </div>
                     </div>
                 `;
@@ -2498,206 +2399,216 @@
             exportReportToExcel() {
                 const table = document.querySelector('#print-container table');
                 if (!table) {
-                    this.showToast('Gagal mengeksport, tabel tidak ditemukan.', 'error');
+                    this.showToast('Gantikan / Generate Laporan terlebih dahulu!', 'error');
                     return;
                 }
                 const wb = XLSX.utils.table_to_book(table, { sheet: "Laporan_Absensi" });
                 XLSX.writeFile(wb, `Laporan_Absensi_${document.getElementById('rep-class').value}.xlsx`);
             }
 
-            exportData(format) {
-                let csv = "ID,Tanggal,Kelas,Mata Pelajaran,Guru,Status_Kehadiran\n";
-                this.db.sessions.forEach(sess => {
-                    Object.entries(sess.records).forEach(([stuId, st]) => {
-                        const student = this.db.students.find(s => s.id === stuId);
-                        const stuName = student ? student.name : stuId;
-                        csv += `"${sess.id}","${sess.date}","${sess.classId}","${sess.subject}","${sess.teacher}","${stuName}:${st}"\n`;
+            exportData(type) {
+                if (type === 'csv') {
+                    let csv = "ID,Tanggal,Kelas,Mata Pelajaran,Guru,Status_Ringkasan\n";
+                    this.db.sessions.forEach(s => {
+                        csv += `"${s.id}","${s.date}","${s.classId}","${s.subject}","${s.teacher}","${Object.keys(s.records).length} Siswa Absen"\n`;
                     });
-                });
-
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Data_Absensi_MIS_${new Date().toISOString().split('T')[0]}.csv`;
-                a.click();
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Export_Absensi_${Date.now()}.csv`;
+                    a.click();
+                }
             }
 
             backupData() {
-                const jsonStr = JSON.stringify(this.db, null, 2);
-                const blob = new Blob([jsonStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Backup_MIS_Absensi_${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.db, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `Backup_Absensi_MIS_${new Date().toISOString().split('T')[0]}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+                this.showToast('Database berhasil dicadangkan (JSON)', 'success');
             }
 
             handleRestoreJSON() {
-                const fileInput = document.getElementById('restore-file-input');
-                const file = fileInput.files[0];
+                const input = document.getElementById('restore-file-input');
+                const file = input.files[0];
                 if (!file) {
-                    this.showToast('Pilih file JSON backup terlebih dahulu!', 'error');
+                    this.showToast('Pilih file backup (.json) dahulu!', 'error');
                     return;
                 }
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const parsed = JSON.parse(e.target.result);
-                        if (parsed.settings && parsed.students) {
-                            this.db = parsed;
-                            this.saveToStorage();
-                            this.init();
-                            this.closeModal('modal-restore');
-                            this.showToast('Database berhasil dipulihkan dari cadangan!', 'success');
-                        } else {
-                            this.showToast('Format JSON file backup tidak valid.', 'error');
-                        }
+                        this.db = parsed;
+                        this.saveToStorage();
+                        this.showToast('Database berhasil dipulihkan!', 'success');
+                        setTimeout(() => location.reload(), 1000);
                     } catch (err) {
-                        this.showToast('Gagal membaca file JSON.', 'error');
+                        this.showToast('File JSON tidak valid!', 'error');
                     }
                 };
                 reader.readAsText(file);
             }
 
-            saveSettings() {
-                this.db.settings.schoolName = document.getElementById('set-school').value.trim();
-                this.db.settings.teacherName = document.getElementById('set-teacher').value.trim();
-                this.db.settings.teacherNip = document.getElementById('set-nip').value.trim();
-                this.db.settings.headmasterName = document.getElementById('set-headmaster').value.trim();
-                this.db.settings.headmasterNip = document.getElementById('set-headmaster-nip').value.trim();
-
-                this.saveToStorage();
-                this.populateTeacherDropdown();
-                this.renderDashboardStats();
-                this.showToast('Pengaturan profil sekolah disimpan!', 'success');
-            }
-
-            addClass() {
-                const name = document.getElementById('new-class-name').value.trim();
-                if (!name) return;
-
-                if (!this.db.settings.classes.includes(name)) {
-                    this.db.settings.classes.push(name);
-                    this.db.auth.classCreds[name] = {
-                        username: name.toLowerCase().replace(/\s+/g, ''),
-                        password: '123'
-                    };
-                    this.saveToStorage();
-                    this.populateClassDropdowns();
-                    this.initCoverClassButtons();
-                    this.renderAccountCredentialsSettings();
-                    document.getElementById('new-class-name').value = '';
-                    this.showToast(`Kelas "${name}" berhasil ditambahkan!`, 'success');
-                }
-            }
-
             loadDemoData(showToastMsg = true) {
-                this.db.students = [
-                    { id: "STU-1", nis: "1001", name: "Ahmad Fauzi", gender: "L", classId: "Kelas 5" },
-                    { id: "STU-2", nis: "1002", name: "Siti Nurhaliza", gender: "P", classId: "Kelas 5" },
-                    { id: "STU-3", nis: "1003", name: "Muhammad Rizky", gender: "L", classId: "Kelas 5" },
-                    { id: "STU-4", nis: "1004", name: "Aisyah Putri", gender: "P", classId: "Kelas 5" },
-                    { id: "STU-5", nis: "1005", name: "Bilal Ramadhan", gender: "L", classId: "Kelas 1" }
-                ];
-
                 this.db.teachers = [
                     { id: "TCH-1", name: "Abdullah S. Kaharu, S.Pd", nip: "198506122010011005", role: "Wali Kelas 5" },
-                    { id: "TCH-2", name: "Fatimah Azzahra, S.Pd.I", nip: "199004152015022002", role: "Guru Fikih" }
+                    { id: "TCH-2", name: "Siti Rahmawati, S.Pd.I", nip: "199003142015022003", role: "Wali Kelas 1" },
+                    { id: "TCH-3", name: "Ahmad Zain, S.Pd", nip: "198807202012011002", role: "Guru PJOK" }
                 ];
-
+                this.db.students = [
+                    { id: "STU-1", nis: "1001", name: "Ahmad Fauzi", gender: "L", classId: "Kelas 5" },
+                    { id: "STU-2", nis: "1002", name: "Aisyah Humaira", gender: "P", classId: "Kelas 5" },
+                    { id: "STU-3", nis: "1003", name: "Badrul Alam", gender: "L", classId: "Kelas 5" },
+                    { id: "STU-4", nis: "1004", name: "Citra Lestari", gender: "P", classId: "Kelas 5" },
+                    { id: "STU-5", nis: "1005", name: "Dilan Ramadhan", gender: "L", classId: "Kelas 5" },
+                    { id: "STU-6", nis: "1006", name: "Fathimah Az-Zahra", gender: "P", classId: "Kelas 1" },
+                    { id: "STU-7", nis: "1007", name: "Galih Pratama", gender: "L", classId: "Kelas 1" }
+                ];
+                this.db.sessions = [
+                    {
+                        id: "SESS-101",
+                        date: new Date().toISOString().split('T')[0],
+                        classId: "Kelas 5",
+                        teacher: "Abdullah S. Kaharu, S.Pd",
+                        subject: "Mapel SKI",
+                        records: { "STU-1": "H", "STU-2": "H", "STU-3": "I", "STU-4": "H", "STU-5": "S" }
+                    }
+                ];
                 this.saveToStorage();
-                this.populateTeacherDropdown();
-                this.renderDashboardStats();
-                this.renderStudents();
-                if (showToastMsg) this.showToast('Data demo berhasil dimuat!', 'success');
-            }
-
-            resetAllData() {
-                if (confirm('Apakah Anda YAKIN ingin menghapus seluruh data di aplikasi? Data tidak dapat dikembalikan!')) {
-                    localStorage.removeItem('mis_absensi_data_v3');
+                if (showToastMsg) {
+                    this.showToast("Data demo berhasil dimuat!", "success");
                     location.reload();
                 }
             }
 
-            applyTheme(theme) {
-                document.documentElement.setAttribute('data-theme', theme);
-                this.db.settings.theme = theme;
-                this.saveToStorage();
-            }
-
-            changeTheme(theme) {
-                this.applyTheme(theme);
-                this.showToast(`Tema diubah ke ${theme === 'dark' ? 'Mode Gelap' : 'Mode Terang'}`, 'success');
-            }
-
-            openModal(modalId) {
-                const el = document.getElementById(modalId);
-                if (el) {
-                    el.classList.add('active');
-                    if (modalId === 'modal-student') {
-                        const user = this.db.auth?.currentUser;
-                        const selectCls = document.getElementById('student-class');
-                        if (user && user.role === 'class' && selectCls) {
-                            selectCls.value = user.classId;
-                            selectCls.disabled = true;
-                        } else if (selectCls) {
-                            selectCls.disabled = false;
-                        }
-                    }
+            resetAllData() {
+                if (confirm('PERINGATAN: Seluruh data siswa, guru, dan absensi akan dihapus permanen! Lanjutkan?')) {
+                    localStorage.removeItem('mis_absensi_data_v3');
+                    this.showToast('Database telah direset.', 'success');
+                    setTimeout(() => location.reload(), 1000);
                 }
-            }
-
-            closeModal(modalId) {
-                const el = document.getElementById(modalId);
-                if (el) el.classList.remove('active');
             }
 
             switchView(viewId) {
-                const user = this.db.auth?.currentUser;
-                if (user && user.role === 'class') {
-                    if (viewId === 'view-teachers' || viewId === 'view-settings') {
-                        this.showToast('Akses dibatasi. Guru kelas hanya dapat mengelola data siswa dan absensi.', 'error');
-                        return;
-                    }
-                }
-
-                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
                 const target = document.getElementById(viewId);
                 if (target) target.classList.add('active');
 
-                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                const navItem = document.querySelector(`.nav-item[data-target="${viewId}"]`);
-                if (navItem) navItem.classList.add('active');
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.toggle('active', item.getAttribute('data-target') === viewId);
+                });
 
-                if (viewId === 'view-dashboard') this.renderDashboardStats();
-                if (viewId === 'view-teachers') this.renderTeachers();
                 if (viewId === 'view-students') this.renderStudents();
+                if (viewId === 'view-teachers') this.renderTeachers();
                 if (viewId === 'view-history') this.renderHistory();
                 if (viewId === 'view-reports') this.generateReport();
-                if (viewId === 'view-settings') this.renderAccountCredentialsSettings();
+                if (viewId === 'view-settings') this.renderSettingsClassList();
+            }
 
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            openModal(id) {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('active');
+            }
+
+            closeModal(id) {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('active');
             }
 
             showToast(message, type = 'success') {
                 const container = document.getElementById('toast-container');
-                if (!container) return;
-
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
-                toast.innerHTML = `
-                    <span>${type === 'success' ? '✅' : '⚠️'}</span>
-                    <span>${message}</span>
-                `;
-
+                toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span> <span>${message}</span>`;
                 container.appendChild(toast);
-                setTimeout(() => toast.remove(), 3500);
+
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            applyTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                document.getElementById('set-theme').value = theme;
+            }
+
+            changeTheme(theme) {
+                this.db.settings.theme = theme;
+                this.applyTheme(theme);
+                this.saveToStorage();
+            }
+
+            addClass() {
+                const input = document.getElementById('new-class-name');
+                const name = input.value.trim();
+                if (!name) return;
+
+                if (!this.db.settings.classes.includes(name)) {
+                    this.db.settings.classes.push(name);
+                    this.saveToStorage();
+                    this.populateClassDropdowns();
+                    this.renderSettingsClassList();
+                    this.initCoverClassButtons();
+                    input.value = '';
+                    this.showToast(`Kelas ${name} berhasil ditambahkan`, 'success');
+                } else {
+                    this.showToast('Nama kelas sudah ada!', 'error');
+                }
+            }
+
+            saveSettings() {
+                this.db.settings.schoolName = document.getElementById('set-school').value;
+                this.db.settings.teacherName = document.getElementById('set-teacher').value;
+                this.db.settings.teacherNip = document.getElementById('set-nip').value;
+                this.db.settings.headmasterName = document.getElementById('set-headmaster').value;
+                this.db.settings.headmasterNip = document.getElementById('set-headmaster-nip').value;
+
+                this.saveToStorage();
+                this.renderDashboardStats();
+                this.showToast('Pengaturan profil berhasil disimpan', 'success');
+            }
+
+            renderSettingsClassList() {
+                document.getElementById('set-school').value = this.db.settings.schoolName;
+                document.getElementById('set-teacher').value = this.db.settings.teacherName;
+                document.getElementById('set-nip').value = this.db.settings.teacherNip;
+                document.getElementById('set-headmaster').value = this.db.settings.headmasterName || '';
+                document.getElementById('set-headmaster-nip').value = this.db.settings.headmasterNip || '';
+
+                const list = document.getElementById('settings-class-list');
+                list.innerHTML = '';
+                this.db.settings.classes.forEach(c => {
+                    const tag = document.createElement('div');
+                    tag.style.cssText = 'display:inline-flex; align-items:center; gap:8px; background:var(--bg-color); border:1px solid var(--border); padding:6px 12px; border-radius:20px; margin:4px; font-weight:600; font-size:0.88rem;';
+                    tag.innerHTML = `<span>${c}</span> <span style="cursor:pointer; color:red;" onclick="app.removeClass('${c}')">&times;</span>`;
+                    list.appendChild(tag);
+                });
+
+                this.renderAccountCredentialsSettings();
+            }
+
+            removeClass(cls) {
+                if (confirm(`Hapus ${cls} dari daftar?`)) {
+                    this.db.settings.classes = this.db.settings.classes.filter(c => c !== cls);
+                    this.saveToStorage();
+                    this.populateClassDropdowns();
+                    this.renderSettingsClassList();
+                    this.initCoverClassButtons();
+                    this.showToast(`${cls} telah dihapus`, 'success');
+                }
             }
         }
 
-        const app = new AttendanceApp();
+        let app;
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new AttendanceApp();
+        });
     </script>
 </body>
 </html>
